@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react'; // Importe useEffect
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { User } from '../types'; // Importe a interface User do seu types.ts
+import { User } from '../types';
 
 const AdminScreen: React.FC = () => {
-    const { state } = useAppContext(); // Não precisamos mais do 'dispatch' do AppContext para ADD/TOGGLE_USER_STATUS aqui
+    const { state } = useAppContext();
     const [newUser, setNewUser] = useState({ username: '', password: '', name: '' });
-    const [users, setUsers] = useState<User[]>([]); // Estado local para armazenar usuários do backend
-    const [loading, setLoading] = useState(true); // Estado de carregamento
-    const [error, setError] = useState<string | null>(null); // Estado para mensagens de erro
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     // Função para buscar usuários do backend
     const fetchUsers = async () => {
@@ -20,17 +20,17 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/users', { // Endpoint para listar usuários
+            const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', { // ALterado!
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Envia o token JWT
+                    'Authorization': `Bearer ${token}`
                 }
             });
             const data = await response.json();
 
             if (response.ok) {
-                setUsers(data); // Assume que 'data' é um array de usuários do tipo User
+                setUsers(data);
             } else {
                 setError(data.message || 'Falha ao buscar usuários.');
             }
@@ -42,19 +42,18 @@ const AdminScreen: React.FC = () => {
         }
     };
 
-    // UseEffect para carregar usuários quando o componente for montado
     useEffect(() => {
         fetchUsers();
-    }, []); // O array vazio de dependências garante que isso rode apenas uma vez ao montar
+    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setNewUser(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleAddUser = async (e: React.FormEvent) => { // Torne a função assíncrona
+    const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null); // Limpa erros anteriores
+        setError(null);
         if (!newUser.username || !newUser.password || !newUser.name) {
             setError('Por favor, preencha todos os campos para adicionar um novo usuário.');
             return;
@@ -67,20 +66,20 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/users', { // Endpoint para adicionar usuário
+            const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', { // ALterado!
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Envia o token JWT
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ ...newUser, isAdmin: false }) // Novas contas geralmente não são admin por padrão
+                body: JSON.stringify({ ...newUser, isAdmin: false })
             });
             const data = await response.json();
 
             if (response.ok) {
-                alert('Usuário adicionado com sucesso!'); // Mensagem de sucesso
-                setNewUser({ username: '', password: '', name: '' }); // Limpa o formulário
-                fetchUsers(); // Recarrega a lista de usuários para mostrar o novo
+                alert('Usuário adicionado com sucesso!');
+                setNewUser({ username: '', password: '', name: '' });
+                fetchUsers();
             } else {
                 setError(data.message || 'Falha ao adicionar usuário.');
             }
@@ -90,12 +89,9 @@ const AdminScreen: React.FC = () => {
         }
     };
     
-    const handleToggleStatus = async (userId: string, currentStatus: boolean) => { // userId agora é string (MongoDB _id)
-        setError(null); // Limpa erros anteriores
+    const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+        setError(null);
 
-        // Previne desativar o próprio usuário administrador logado
-        // Note: Se o ID do admin é fixo ou conhecido, você pode fazer uma checagem mais específica.
-        // Aqui, estou usando o _id do usuário logado e se ele é admin.
         if (state.currentUser?._id === userId && state.currentUser?.isAdmin) {
              alert("Não é possível desativar o seu próprio usuário administrador.");
              return;
@@ -108,19 +104,19 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, { // Endpoint para ativar/desativar
-                method: 'PATCH', // Ou PUT, dependendo da sua API. PATCH é mais comum para atualizações parciais.
+            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/status`, { // ALterado!
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Envia o token JWT
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ isActive: !currentStatus }) // Envia o novo status
+                body: JSON.stringify({ isActive: !currentStatus })
             });
             const data = await response.json();
 
             if (response.ok) {
-                alert(`Usuário ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`); // Mensagem de sucesso
-                fetchUsers(); // Recarrega a lista de usuários para refletir a mudança
+                alert(`Usuário ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`);
+                fetchUsers();
             } else {
                 setError(data.message || 'Falha ao atualizar status do usuário.');
             }
@@ -136,14 +132,13 @@ const AdminScreen: React.FC = () => {
                 Administração de Usuários
             </h2>
 
-            {error && ( // Exibe mensagens de erro
+            {error && (
                 <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md" role="alert">
                     <p>{error}</p>
                 </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Add User Form */}
                 <div className="md:col-span-1">
                     <h3 className="text-lg font-semibold text-brand-primary mb-4">Criar Novo Usuário</h3>
                     <form onSubmit={handleAddUser} className="space-y-4 p-4 bg-slate-50 rounded-lg border">
@@ -192,7 +187,6 @@ const AdminScreen: React.FC = () => {
                     </form>
                 </div>
 
-                {/* Users List */}
                 <div className="md:col-span-2">
                      <h3 className="text-lg font-semibold text-brand-primary mb-4">Lista de Usuários</h3>
                      {loading ? (
@@ -211,8 +205,8 @@ const AdminScreen: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-brand-surface divide-y divide-brand-border">
-                                    {users.map(user => ( // Mapeia a lista 'users' do estado local
-                                        <tr key={user._id}> {/* Use user._id para a chave */}
+                                    {users.map(user => (
+                                        <tr key={user._id}>
                                             <td className="px-4 py-3 font-medium text-brand-text-primary">{user.name}</td>
                                             <td className="px-4 py-3 text-brand-text-secondary">{user.username}</td>
                                             <td className="px-4 py-3 text-center">
@@ -224,8 +218,7 @@ const AdminScreen: React.FC = () => {
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <button
-                                                    onClick={() => handleToggleStatus(user._id, user.isActive)} // Passe user._id e user.isActive
-                                                    // Desabilita o botão se o usuário for admin E for o próprio usuário logado
+                                                    onClick={() => handleToggleStatus(user._id, user.isActive)}
                                                     disabled={user.isAdmin && state.currentUser?._id === user._id}
                                                     className={`py-1 px-3 text-xs font-medium rounded-md transition-colors ${
                                                         (user.isAdmin && state.currentUser?._id === user._id) ? 'cursor-not-allowed opacity-50 bg-slate-200' 

@@ -4,7 +4,7 @@ import type {
     ReportTextBlocks, ReportConfig, User 
 } from '../types'; 
 // Importe QualificationType como um VALOR, não apenas um tipo
-import { QualificationType } from '../types'; //
+import { QualificationType } from '../types'; 
 
 const chamberTextBlocks: ReportTextBlocks = {
     introduction: "Este relatório detalha os procedimentos e resultados da qualificação térmica realizada em conformidade com as diretrizes da norma ABNT NBR 16328 e RDC 430/2020. A qualificação térmica de câmaras de conservação é um procedimento essencial para garantir a conformidade e a confiabilidade de equipamentos utilizados na armazenagem de produtos que requerem condições térmicas controladas. Esse processo é especialmente crítico em setores como o farmacêutico, alimentício e hospitalar, onde a manutenção de temperaturas específicas é indispensável para preservar a integridade e a qualidade dos produtos.\n\nO procedimento de qualificação térmica envolve uma série de testes e análises destinados a verificar se a câmara opera dentro dos padrões exigidos pelas normas regulatórias aplicáveis, incluindo a verificação da uniformidade de temperatura, estabilidade térmica e desempenho do sistema de controle, entre outros parâmetros.",
@@ -44,7 +44,7 @@ const autoclaveDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDes
 
 const initialState: AppState = {
   currentUser: null,
-  qualificationType: QualificationType.CHAMBER, //
+  qualificationType: QualificationType.CHAMBER,
   currentStep: 'login', 
   config: {
     clientName: "FUNDAÇÃO HOSPITALAR DO ESTADO DE MINAS GERAIS - HOSPITAL JOÃO XXIII",
@@ -508,3 +508,5 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 };
 
 export default AppContext;
+}
+AI ESTÃO OS ARQUIVOS

@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { ChamberIcon } from '../components/icons';
-// Não precisamos mais importar 'User' aqui, pois o AppContext já o lida.
 
 const LoginScreen: React.FC = () => {
-    const { state, dispatch } = useAppContext();
+    const { dispatch } = useAppContext(); // 'state' não é usado aqui, pode ser removido
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleLogin = async (e: React.FormEvent) => { // Adicione 'async' aqui
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
         try {
-            // Requisição POST para o endpoint de login do backend
-            const response = await fetch('http://localhost:5000/api/login', {
+            // Requisição POST para o endpoint de login do backend no Render
+            const response = await fetch('https://thermocert-api-backend.onrender.com/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -26,16 +25,11 @@ const LoginScreen: React.FC = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Se a resposta for bem-sucedida (status 2xx)
-                // O backend deve retornar o token e os dados do usuário.
-                // Exemplo de payload esperado: { token: '...', user: { _id: '...', username: '...', name: '...', isActive: true, isAdmin: true } }
-                dispatch({ type: 'LOGIN', payload: { user: data.user, token: data.token } }); // Dispara a ação LOGIN com o usuário e o token
+                dispatch({ type: 'LOGIN', payload: { user: data.user, token: data.token } });
             } else {
-                // Se a resposta não for ok (ex: 401 Unauthorized, 400 Bad Request)
                 setError(data.message || 'Erro ao fazer login. Verifique suas credenciais.');
             }
         } catch (err) {
-            // Erros de rede ou do servidor
             console.error('Erro de rede ou servidor:', err);
             setError('Não foi possível conectar ao servidor. Tente novamente mais tarde.');
         }
