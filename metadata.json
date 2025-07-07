@@ -1,0 +1,6 @@
+{
+  "name": "ThermoCert Pro",
+  "description": "ThermoCert Pro (anteriormente ThermoQuali Pro) é uma aplicação web completa para automatizar a criação de relatórios técnicos de qualificação térmica (Instalação, Operação e Performance) para Câmaras de Conservação e Autoclaves. Suporta importação de dados via .json, .csv e .xlsx, e gera relatórios profissionais em PDF (com anexos e marca d'água) e Word, em conformidade com as normas ABNT, ISO e ANVISA.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
