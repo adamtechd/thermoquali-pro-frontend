@@ -4,17 +4,18 @@ const CACHE_NAME = 'thermocert-pro-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
+  // REMOVIDO: '/index.css', pois não existe como arquivo estático na raiz do build
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
-  // Other major assets can be added here
 ];
 
 self.addEventListener('install', event => {
-  // Perform install steps
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
+        // ATENÇÃO: As URLs aqui também precisam corresponder aos assets reais do build.
+        // Ex: '/assets/index-<hash>.css' se o Vite renomear.
         return cache.addAll(urlsToCache);
       })
   );
@@ -24,22 +25,16 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
 
         return fetch(event.request).then(
           response => {
-            // Check if we received a valid response
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // IMPORTANT: Clone the response. A response is a stream
-            // and because we want the browser to consume the response
-            // as well as the cache consuming the response, we need
-            // to clone it so we have two streams.
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
