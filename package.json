@@ -9,19 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "docx": "^8.5.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
+    "pdf-lib": "^1.17.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-dropzone": "^14.3.8",
-    "recharts": "^3.0.2",
     "react-router-dom": "^7.6.3",
-    "jspdf": "^2.5.1",
-    "jspdf-autotable": "^3.8.2",
-    "html2canvas": "^1.4.1",
-    "pdf-lib": "^1.17.1",
-    "docx": "^8.5.0"
+    "recharts": "^3.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
