@@ -475,7 +475,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const fetchUserFromToken = async () => {
         try {
           // Usando o proxy do Vite, a URL pode ser '/api/auth/me' em vez de 'http://localhost:5000/api/auth/me'
-          const response = await fetch('/api/auth/me', { 
+          const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/me', { // AQUI alterado!
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -508,5 +508,3 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 };
 
 export default AppContext;
-}
-AI ESTÁ O ARQUIVO CORRIGIDO.
