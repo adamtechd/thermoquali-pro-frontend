@@ -1,10 +1,14 @@
-import React, { createContext, useReducer, Dispatch, useContext } from 'react';
+import React, { createContext, useReducer, Dispatch, useContext, useEffect } from 'react';
 import type { 
     AppState, AppAction, SensorDataRow, TestResult, RawArkmedsData, 
     ReportTextBlocks, ReportConfig, User 
 } from '../types'; 
-// Importe QualificationType como um VALOR, não apenas um tipo
 import { QualificationType } from '../types'; 
+
+// Importa o auth e db do Firebase
+import { auth, db } from '../services/firebase'; 
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore'; 
 
 const chamberTextBlocks: ReportTextBlocks = {
     introduction: "Este relatório detalha os procedimentos e resultados da qualificação térmica realizada em conformidade com as diretrizes da norma ABNT NBR 16328 e RDC 430/2020. A qualificação térmica de câmaras de conservação é um procedimento essencial para garantir a conformidade e a confiabilidade de equipamentos utilizados na armazenagem de produtos que requerem condições térmicas controladas. Esse processo é especialmente crítico em setores como o farmacêutico, alimentício e hospitalar, onde a manutenção de temperaturas específicas é indispensável para preservar a integridade e a qualidade dos produtos.\n\nO procedimento de qualificação térmica envolve uma série de testes e análises destinados a verificar se a câmara opera dentro dos padrões exigidos pelas normas regulatórias aplicáveis, incluindo a verificação da uniformidade de temperatura, estabilidade térmica e desempenho do sistema de controle, entre outros parâmetros.",
@@ -105,7 +109,7 @@ const getDefaultTextsForTest = (testName: string, type: QualificationType) => {
             description: "É o ensaio que verificada a distribuição de temperatura no interior da câmara do equipamento. Sensores de temperatura são distribuídos pela câmara interna, em configuração de grelha, sem tocar as superfícies. A temperatura é então monitorada em todos os pontos.",
             cycleInfo: `Ciclo desempenho térmico– 5 °C–${isDistribuicao ? '24 hora(s)' : '10 minutos'}–${testName}`,
             methodology: "Para iniciar o estudo de distribuição de temperatura, é necessário distribuir geometricamente 12 sensores de temperatura dentro da câmara interna, com um obrigatoriamente posicionado adjacente ao sensor de controle de temperatura do equipamento e garantindo que os sensores não entrem em contato com a superfície interna do equipamento. Convém que uma distância mínima de 3 cm entre os sensores e as laterais internas do equipamento seja respeitada.",
-            acceptanceCriteria: "Durante o período de ensaio:\n• Em um determinado momento, as temperaturas médias medidas (máxima e mínima) devem estar entre 2 °C e 8 °C.\n• Calculando a média de temperatura de cada um dos sensores, a diferença máxima entre o maior e o menor valor deve ser de ± 3 °C.\n• A variação máxima de temperatura em um dado sensor deve ser de 3 °C.",
+            acceptanceCriteria: "Durante o período de ensaio:\n• Em um determinado momento, as temperaturas médias medidas (máxima e mínima) devem estar entre 2 °C e 8 °C.\n• Calculando a média de temperatura de cada um dos sensores, a diferença máxima entre o maior e o menor valor deve ser de ± 3 °C.\n• Avariação máxima de temperatura em um dado sensor deve ser de 3 °C.",
             results: "A seguinte tabela apresenta o comportamento da temperatura. Situação: Aprovado"
         };
     } else { // autoclave
@@ -341,9 +345,9 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
             };
 
             if (state.qualificationType === QualificationType.AUTOCLAVE) {
-                const { f0Results, minF0 } = calculateF0(rawData);
-                testResult.f0Results = f0Results;
-                testResult.summary.f0 = minF0;
+                const { f0Results, minF0 } = calculateF0(testToUpdate.rawData);
+                testToUpdate.f0Results = f0Results;
+                testToUpdate.summary.f0 = minF0;
                 if (minF0 < 15) {
                     testResult.summary.status = 'Não Conforme';
                 }
@@ -413,7 +417,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         const chamberAvg = testToUpdate.rawData.length > 0 ? totalAvg / rawData.length : 0;
     
         testToUpdate.summary = {
-            ...testToUpdate.summary,
+            ...testToUpdate.summary, 
             min: parseFloat(overallMin.toFixed(1)),
             max: parseFloat(overallMax.toFixed(1)),
             chamber: parseFloat(chamberAvg.toFixed(1)),
@@ -467,15 +471,12 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Efeito para carregar o token do localStorage e tentar logar o usuário ao iniciar a aplicação
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && !state.currentUser) {
-      // Faz uma chamada real para o backend para validar o token e obter os dados do usuário.
       const fetchUserFromToken = async () => {
         try {
-          // Usando o proxy do Vite, a URL pode ser '/api/auth/me' em vez de 'http://localhost:5000/api/auth/me'
-          const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/me', { // AQUI alterado!
+          const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/me', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -486,7 +487,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const userData: User = await response.json(); 
             dispatch({ type: 'LOGIN', payload: { user: userData, token: token } });
           } else {
-            // Token inválido ou expirado, limpa e redireciona para login
             localStorage.removeItem('token');
             dispatch({ type: 'LOGOUT' }); 
           }

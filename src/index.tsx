@@ -4,7 +4,7 @@ import App from './App';
 
 // Se você tem um arquivo CSS principal (ex: index.css ou App.css)
 // que você importa diretamente no JavaScript, ele é processado pelo Vite.
-// Exemplo: import './index.css'; // <--- Se você tiver uma linha assim, o CSS é injetado.
+// Exemplo: import './index.css'; 
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
