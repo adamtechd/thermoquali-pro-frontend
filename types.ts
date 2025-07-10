@@ -1,12 +1,20 @@
 // types.ts
 
 export interface User {
-    _id: string; // ID do MongoDB é uma string
+    _id: string; 
     username: string;
-    // Removida a propriedade 'password' - senhas não devem estar no frontend
+    email?: string; // Adicionado email, pois o Firebase Auth usa
     name: string;
     isActive: boolean;
-    isAdmin: boolean; // Adicionado para controle de acesso administrativo
+    isAdmin: boolean; 
+    permissions?: { // NOVO: Permissões modulares, tornando-o opcional para flexibilidade
+      canEdit?: boolean;
+      canGeneratePdf?: boolean;
+      canGenerateDocx?: boolean;
+      canGenerateExcel?: boolean;
+      canAccessAdmin?: boolean;
+      isTestMode?: boolean; 
+    };
 }
 
 export interface ArkmedsMeasure {
@@ -79,6 +87,7 @@ export interface TestSummary {
 }
 
 export interface TestResult {
+  id?: string; // ID do teste, pode ser gerado dinamicamente
   name: string;
   summary: TestSummary;
   rawData: SensorDataRow[];
@@ -108,8 +117,7 @@ export enum QualificationType {
 
 export interface AppState {
   currentUser: User | null;
-  // Removida a propriedade 'users' - gerenciamento de usuários via API
-  currentStep: 'login' | 'upload' | 'config' | 'editor' | 'admin'; // 'login' e 'admin' adicionados
+  currentStep: 'login' | 'upload' | 'config' | 'editor' | 'admin' | 'payment'; // Adicionado 'payment'
   qualificationType: QualificationType;
   config: ReportConfig;
   textBlocks: ReportTextBlocks;
@@ -121,17 +129,13 @@ export interface AppState {
   calibrationCertificate: File | null;
   isGeneratingPdf: boolean;
   isGeneratingWord: boolean;
+  users: User[]; // Mantido para o contexto de listagem de usuários no AdminScreen
 }
 
 export type AppAction =
-  | { type: 'LOGIN'; payload: { user: User; token: string } } // Payload de LOGIN agora inclui o token
+  | { type: 'LOGIN'; payload: { user: User; token: string } } 
   | { type: 'LOGOUT' }
-  // Removidas as ações 'ADD_USER' e 'TOGGLE_USER_STATUS' - gerenciamento de usuários via API
-  /*
-  | { type: 'ADD_USER'; payload: { user: Omit<User, 'id' | 'isActive'> } }
-  | { type: 'TOGGLE_USER_STATUS'; payload: { userId: number } }
-  */
-  | { type: 'SET_STEP'; payload: 'login' | 'upload' | 'config' | 'editor' | 'admin' } // Payload de SET_STEP atualizado
+  | { type: 'SET_STEP'; payload: AppState['currentStep'] } 
   | { type: 'SET_QUALIFICATION_TYPE'; payload: QualificationType }
   | { type: 'SET_CONFIG'; payload: Partial<ReportConfig> }
   | { type: 'SET_TEXT_BLOCK'; payload: { key: keyof ReportTextBlocks, value: string } }
@@ -146,75 +150,11 @@ export type AppAction =
   | { type: 'SET_GENERATING_PDF'; payload: boolean }
   | { type: 'SET_GENERATING_WORD'; payload: boolean };
 
-// Added types for older components - can be removed if not used
-export interface ClientInfo {
-  name: string;
-  cnpj: string;
-  address: string;
-}
-
-export interface EquipmentInfo {
-  name: string;
-  manufacturer: string;
-  model: string;
-  serialNumber: string;
-  identification: string;
-  temperatureRange: string;
-}
-
-export interface ReportMetadata {
-  responsible: string;
-  executor: string;
-  reviewer: string;
-  qualification: string;
-  coldChain: boolean;
-}
-
-export interface SensorReading {
-  time: number;
-  temperatures: { [sensorId: string]: number | null };
-}
-
-export interface TestStats {
-  stability: { [sensorId: string]: number | null };
-  uniformity: number | null;
-  minTemp: number | null;
-  maxTemp: number | null;
-  avgTemp: number | null;
-  lethalityF0?: { [sensorId: string]: number | null };
-  minF0?: number | null;
-}
-
-export interface Test {
-  id: string;
-  name: string;
-  data: SensorReading[];
-  status: 'Conforme' | 'Não Conforme' | 'N/A';
-  stats: TestStats;
-  chartId: string;
-  startTimestamp: number;
-}
-
-export interface ReportData {
-  qualificationType: QualificationType | null;
-  client: ClientInfo;
-  equipment: EquipmentInfo;
-  metadata: ReportMetadata;
-  tests: Test[];
-  sections: {
-    introduction: string;
-    objectives: string;
-    responsibilities: string;
-    definitions: string;
-    instrumentation: string;
-    methodology: string;
-    conclusion: string;
-  };
-  images: {
-    companyLogo: string | null;
-    sensorLayout: string | null;
-    equipmentPhoto: string | null;
-    watermark: string | null;
-  };
-  calibrationCertificate: File | null;
-}
+// Tipos de componentes antigos (podem ser removidos se não forem mais usados)
+export interface ClientInfo { name: string; cnpj: string; address: string; }
+export interface EquipmentInfo { name: string; manufacturer: string; model: string; serialNumber: string; identification: string; temperatureRange: string; }
+export interface ReportMetadata { responsible: string; executor: string; reviewer: string; qualification: string; coldChain: boolean; }
+export interface SensorReading { time: number; temperatures: { [sensorId: string]: number | null }; }
+export interface TestStats { stability: { [sensorId: string]: number | null }; uniformity: number | null; minTemp: number | null; maxTemp: number | null; avgTemp: number | null; lethalityF0?: { [sensorId: string]: number | null }; minF0?: number | null; }
+export interface TestOld { id: string; name: string; data: SensorReading[]; status: 'Conforme' | 'Não Conforme' | 'N/A'; stats: TestStats; chartId: string; startTimestamp: number; }
+export interface ReportData { qualificationType: QualificationType | null; client: ClientInfo; equipment: EquipmentInfo; metadata: ReportMetadata; tests: TestOld[]; sections: { introduction: string; objectives: string; responsibilities: string; definitions: string; instrumentation: string; methodology: string; conclusion: string; }; images: { companyLogo: string | null; sensorLayout: string | null; equipmentPhoto: string | null; watermark: string | null; }; calibrationCertificate: File | null; }

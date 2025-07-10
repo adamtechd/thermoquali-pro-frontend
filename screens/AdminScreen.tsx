@@ -1,13 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { User } from '../types';
+import { User } from '../types'; // Importe a interface User do seu types.ts
 
 const AdminScreen: React.FC = () => {
     const { state } = useAppContext();
-    const [newUser, setNewUser] = useState({ username: '', password: '', name: '' });
+    const [newUser, setNewUser] = useState({ username: '', password: '', name: '', email: '' }); // Adicionado email para registro
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Funções de toggle de permissões (NOVO)
+    const togglePermission = async (userId: string, permission: keyof User['permissions'], currentValue: boolean) => {
+        setError(null);
+        try {
+            // Requisição PATCH para atualizar permissões no backend (se o backend Node.js gerenciar isso)
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setError('Token de autenticação não encontrado. Faça login novamente.');
+                return;
+            }
+
+            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/permissions`, { // Rota NOVO
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ permission, value: !currentValue }) // Envia a permissão e o novo valor
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(`Permissão ${permission} atualizada com sucesso para ${data.user.name}!`);
+                fetchUsers(); // Recarrega a lista de usuários
+            } else {
+                setError(data.message || `Falha ao atualizar permissão ${permission}.`);
+            }
+
+        } catch (err) {
+            console.error(`Erro ao atualizar permissão ${permission}:`, err);
+            setError(`Não foi possível conectar ao servidor para atualizar a permissão ${permission}.`);
+        }
+    };
+
 
     // Função para buscar usuários do backend
     const fetchUsers = async () => {
@@ -20,7 +55,7 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', { // ALterado!
+            const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -51,10 +86,11 @@ const AdminScreen: React.FC = () => {
         setNewUser(prev => ({ ...prev, [name]: value }));
     };
 
+    // Este handleAddUser é para o backend Node.js
     const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!newUser.username || !newUser.password || !newUser.name) {
+        if (!newUser.username || !newUser.password || !newUser.name || !newUser.email) { // Adicionado email
             setError('Por favor, preencha todos os campos para adicionar um novo usuário.');
             return;
         }
@@ -66,19 +102,25 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', { // ALterado!
+            const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ ...newUser, isAdmin: false })
+                body: JSON.stringify({ 
+                    username: newUser.username, 
+                    password: newUser.password, 
+                    name: newUser.name, 
+                    email: newUser.email, // Adicionado email para envio
+                    isAdmin: false // Novos usuários são clientes normais por padrão
+                })
             });
             const data = await response.json();
 
             if (response.ok) {
                 alert('Usuário adicionado com sucesso!');
-                setNewUser({ username: '', password: '', name: '' });
+                setNewUser({ username: '', password: '', name: '', email: '' });
                 fetchUsers();
             } else {
                 setError(data.message || 'Falha ao adicionar usuário.');
@@ -89,6 +131,7 @@ const AdminScreen: React.FC = () => {
         }
     };
     
+    // Este handleToggleStatus é para o backend Node.js
     const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
         setError(null);
 
@@ -104,7 +147,7 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/status`, { // ALterado!
+            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -139,6 +182,7 @@ const AdminScreen: React.FC = () => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Add User Form */}
                 <div className="md:col-span-1">
                     <h3 className="text-lg font-semibold text-brand-primary mb-4">Criar Novo Usuário</h3>
                     <form onSubmit={handleAddUser} className="space-y-4 p-4 bg-slate-50 rounded-lg border">
@@ -155,14 +199,25 @@ const AdminScreen: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="username">Login de Acesso</label>
+                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="email">E-mail (Login)</label> {/* Adicionado email para o form */}
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                value={newUser.email}
+                                onChange={handleInputChange}
+                                required
+                                className="w-full bg-white border border-brand-border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="username">Username (Opcional)</label> {/* Username pode ser opcional se usar email para login */}
                             <input
                                 id="username"
                                 name="username"
                                 type="text"
                                 value={newUser.username}
                                 onChange={handleInputChange}
-                                required
                                 className="w-full bg-white border border-brand-border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-brand-primary"
                             />
                         </div>
@@ -187,6 +242,7 @@ const AdminScreen: React.FC = () => {
                     </form>
                 </div>
 
+                {/* Users List */}
                 <div className="md:col-span-2">
                      <h3 className="text-lg font-semibold text-brand-primary mb-4">Lista de Usuários</h3>
                      {loading ? (
@@ -199,16 +255,36 @@ const AdminScreen: React.FC = () => {
                                 <thead className="bg-slate-100 text-xs text-brand-text-primary uppercase">
                                     <tr>
                                         <th className="px-4 py-3 font-semibold">Nome</th>
-                                        <th className="px-4 py-3 font-semibold">Login</th>
-                                        <th className="px-4 py-3 font-semibold text-center">Status do Acesso</th>
-                                        <th className="px-4 py-3 font-semibold text-center">Ação</th>
+                                        <th className="px-4 py-3 font-semibold">Login (E-mail)</th> {/* Alterado para E-mail */}
+                                        <th className="px-4 py-3 font-semibold text-center">Admin</th> {/* Coluna Admin */}
+                                        <th className="px-4 py-3 font-semibold text-center">Modo Teste</th> {/* Coluna Modo Teste */}
+                                        <th className="px-4 py-3 font-semibold text-center">Status Ativo</th>
+                                        <th className="px-4 py-3 font-semibold text-center">Permissões</th> {/* Coluna para permissões */}
+                                        <th className="px-4 py-3 font-semibold text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-brand-surface divide-y divide-brand-border">
                                     {users.map(user => (
                                         <tr key={user._id}>
                                             <td className="px-4 py-3 font-medium text-brand-text-primary">{user.name}</td>
-                                            <td className="px-4 py-3 text-brand-text-secondary">{user.username}</td>
+                                            <td className="px-4 py-3 text-brand-text-secondary">{user.email || user.username}</td> {/* Mostra email ou username */}
+                                            <td className="px-4 py-3 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={user.isAdmin}
+                                                    onChange={() => togglePermission(user._id, 'isAdmin', user.isAdmin)}
+                                                    disabled={state.currentUser?._id === user._id} // Não pode mudar seu próprio status admin
+                                                    className="form-checkbox h-4 w-4 text-brand-primary rounded"
+                                                />
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={user.permissions?.isTestMode || false}
+                                                    onChange={() => togglePermission(user._id, 'isTestMode', user.permissions?.isTestMode || false)}
+                                                    className="form-checkbox h-4 w-4 text-brand-primary rounded"
+                                                />
+                                            </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                                                     user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -216,12 +292,22 @@ const AdminScreen: React.FC = () => {
                                                     {user.isActive ? 'Ativo' : 'Inativo'}
                                                 </span>
                                             </td>
+                                            <td className="px-4 py-3 text-center text-xs text-brand-text-secondary">
+                                                {/* Botões para gerenciar permissões modulares */}
+                                                <div className="flex flex-wrap justify-center gap-1">
+                                                    {Object.entries(user.permissions || {}).map(([key, value]) => (
+                                                        <span key={key} className="inline-block bg-slate-100 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-700">
+                                                            {key.replace('can', '').replace('is', '')}: {value ? '✅' : '❌'}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-3 text-center">
                                                 <button
                                                     onClick={() => handleToggleStatus(user._id, user.isActive)}
-                                                    disabled={user.isAdmin && state.currentUser?._id === user._id}
+                                                    disabled={state.currentUser?._id === user._id && user.isAdmin}
                                                     className={`py-1 px-3 text-xs font-medium rounded-md transition-colors ${
-                                                        (user.isAdmin && state.currentUser?._id === user._id) ? 'cursor-not-allowed opacity-50 bg-slate-200' 
+                                                        (state.currentUser?._id === user._id && user.isAdmin) ? 'cursor-not-allowed opacity-50 bg-slate-200' 
                                                         : user.isActive ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
                                                     }`}
                                                 >
