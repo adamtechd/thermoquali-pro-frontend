@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { User } from '../types'; // Importe a interface User do seu types.ts
+import { User } from '../types';
 
 const AdminScreen: React.FC = () => {
     const { state } = useAppContext();
@@ -9,18 +9,18 @@ const AdminScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Funções de toggle de permissões (NOVO)
+    // Funções de toggle de permissões (NOVO no backend Node.js)
     const togglePermission = async (userId: string, permission: keyof User['permissions'], currentValue: boolean) => {
         setError(null);
         try {
-            // Requisição PATCH para atualizar permissões no backend (se o backend Node.js gerenciar isso)
+            // Requisição PATCH para atualizar permissões no backend
             const token = localStorage.getItem('token');
             if (!token) {
                 setError('Token de autenticação não encontrado. Faça login novamente.');
                 return;
             }
 
-            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/permissions`, { // Rota NOVO
+            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/permissions`, { // Rota para atualizar permissões
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +44,6 @@ const AdminScreen: React.FC = () => {
     };
 
 
-    // Função para buscar usuários do backend
     const fetchUsers = async () => {
         setLoading(true);
         setError(null);
@@ -86,11 +85,10 @@ const AdminScreen: React.FC = () => {
         setNewUser(prev => ({ ...prev, [name]: value }));
     };
 
-    // Este handleAddUser é para o backend Node.js
     const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!newUser.username || !newUser.password || !newUser.name || !newUser.email) { // Adicionado email
+        if (!newUser.username || !newUser.password || !newUser.name || !newUser.email) { 
             setError('Por favor, preencha todos os campos para adicionar um novo usuário.');
             return;
         }
@@ -112,8 +110,8 @@ const AdminScreen: React.FC = () => {
                     username: newUser.username, 
                     password: newUser.password, 
                     name: newUser.name, 
-                    email: newUser.email, // Adicionado email para envio
-                    isAdmin: false // Novos usuários são clientes normais por padrão
+                    email: newUser.email, 
+                    isAdmin: false 
                 })
             });
             const data = await response.json();
@@ -131,7 +129,6 @@ const AdminScreen: React.FC = () => {
         }
     };
     
-    // Este handleToggleStatus é para o backend Node.js
     const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
         setError(null);
 
@@ -199,7 +196,7 @@ const AdminScreen: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="email">E-mail (Login)</label> {/* Adicionado email para o form */}
+                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="email">E-mail (Login)</label> 
                             <input
                                 id="email"
                                 name="email"
@@ -211,7 +208,7 @@ const AdminScreen: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="username">Username (Opcional)</label> {/* Username pode ser opcional se usar email para login */}
+                            <label className="block text-sm font-medium text-brand-text-secondary mb-1" htmlFor="username">Username (Opcional)</label> 
                             <input
                                 id="username"
                                 name="username"
@@ -255,11 +252,11 @@ const AdminScreen: React.FC = () => {
                                 <thead className="bg-slate-100 text-xs text-brand-text-primary uppercase">
                                     <tr>
                                         <th className="px-4 py-3 font-semibold">Nome</th>
-                                        <th className="px-4 py-3 font-semibold">Login (E-mail)</th> {/* Alterado para E-mail */}
-                                        <th className="px-4 py-3 font-semibold text-center">Admin</th> {/* Coluna Admin */}
-                                        <th className="px-4 py-3 font-semibold text-center">Modo Teste</th> {/* Coluna Modo Teste */}
+                                        <th className="px-4 py-3 font-semibold">Login (E-mail)</th> 
+                                        <th className="px-4 py-3 font-semibold text-center">Admin</th> 
+                                        <th className="px-4 py-3 font-semibold text-center">Modo Teste</th> 
                                         <th className="px-4 py-3 font-semibold text-center">Status Ativo</th>
-                                        <th className="px-4 py-3 font-semibold text-center">Permissões</th> {/* Coluna para permissões */}
+                                        <th className="px-4 py-3 font-semibold text-center">Permissões</th> 
                                         <th className="px-4 py-3 font-semibold text-center">Ações</th>
                                     </tr>
                                 </thead>
@@ -267,13 +264,13 @@ const AdminScreen: React.FC = () => {
                                     {users.map(user => (
                                         <tr key={user._id}>
                                             <td className="px-4 py-3 font-medium text-brand-text-primary">{user.name}</td>
-                                            <td className="px-4 py-3 text-brand-text-secondary">{user.email || user.username}</td> {/* Mostra email ou username */}
+                                            <td className="px-4 py-3 text-brand-text-secondary">{user.email || user.username}</td>
                                             <td className="px-4 py-3 text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={user.isAdmin}
                                                     onChange={() => togglePermission(user._id, 'isAdmin', user.isAdmin)}
-                                                    disabled={state.currentUser?._id === user._id} // Não pode mudar seu próprio status admin
+                                                    disabled={state.currentUser?._id === user._id}
                                                     className="form-checkbox h-4 w-4 text-brand-primary rounded"
                                                 />
                                             </td>
@@ -293,7 +290,6 @@ const AdminScreen: React.FC = () => {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-center text-xs text-brand-text-secondary">
-                                                {/* Botões para gerenciar permissões modulares */}
                                                 <div className="flex flex-wrap justify-center gap-1">
                                                     {Object.entries(user.permissions || {}).map(([key, value]) => (
                                                         <span key={key} className="inline-block bg-slate-100 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-700">

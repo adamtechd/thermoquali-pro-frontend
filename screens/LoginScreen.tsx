@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { ChamberIcon } from '../components/icons';
-// Importa auth e db do Firebase
-import { auth, db } from '../services/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 
 const LoginScreen: React.FC = () => {
     const { dispatch } = useAppContext();
-    const [email, setEmail] = useState(''); // Email para login/cadastro
+    const [username, setUsername] = useState(''); // Usado como loginIdentifier (email ou username)
     const [password, setPassword] = useState('');
-    const [name, setName] = useState(''); // Nome para cadastro
-    const [isRegistering, setIsRegistering] = useState(false); // Alternar entre login e cadastro
+    const [name, setName] = useState(''); // Para cadastro
+    const [isRegistering, setIsRegistering] = useState(false); 
     const [error, setError] = useState('');
 
     const handleAuth = async (e: React.FormEvent) => {
@@ -20,54 +16,48 @@ const LoginScreen: React.FC = () => {
 
         try {
             if (isRegistering) {
-                // Lógica de Cadastro com Firebase
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const firebaseUser = userCredential.user;
-
-                // Salva informações adicionais do usuário no Firestore
-                const userDocRef = doc(db, 'users', firebaseUser.uid);
-                await setDoc(userDocRef, {
-                    username: email, // Usar email como username no Firestore
-                    email: email,
-                    name: name,
-                    isActive: true,
-                    isAdmin: false, // Novos usuários são clientes normais por padrão
-                    permissions: {
-                        canEdit: false,
-                        canGeneratePdf: false,
-                        canGenerateDocx: false,
-                        canGenerateExcel: false,
-                        canAccessAdmin: false,
-                        isTestMode: true, // Todos novos usuários começam no modo de teste
-                    }
+                // Lógica de Cadastro com Backend Node.js/MongoDB
+                const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username, password: password, name: name, email: username }), // Usando username como email para cadastro
                 });
-                alert('Cadastro realizado com sucesso! Você está no modo de teste.');
-                // O onAuthStateChanged em App.tsx irá lidar com o LOGIN do AppContext
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Cadastro realizado com sucesso! Faça login.');
+                    setIsRegistering(false); // Volta para tela de login
+                    setUsername('');
+                    setPassword('');
+                    setName('');
+                } else {
+                    setError(data.message || 'Erro ao cadastrar. Tente novamente.');
+                }
+
             } else {
-                // Lógica de Login com Firebase
-                await signInWithEmailAndPassword(auth, email, password);
-                // O onAuthStateChanged em App.tsx irá lidar com o LOGIN do AppContext
+                // Lógica de Login com Backend Node.js/MongoDB
+                const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ loginIdentifier: username, password: password }), // Envia 'username' como 'loginIdentifier'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    dispatch({ type: 'LOGIN', payload: { user: data.user, token: data.token } });
+                } else {
+                    setError(data.message || 'Credenciais inválidas.');
+                }
             }
         } catch (err: any) {
-            console.error('Erro de autenticação:', err.code, err.message);
-            switch (err.code) {
-                case 'auth/user-not-found':
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential': // Novo erro para credenciais inválidas
-                    setError('E-mail ou senha inválidos.');
-                    break;
-                case 'auth/email-already-in-use':
-                    setError('Este e-mail já está em uso.');
-                    break;
-                case 'auth/weak-password':
-                    setError('A senha deve ter pelo menos 6 caracteres.');
-                    break;
-                case 'auth/invalid-email':
-                    setError('E-mail inválido.');
-                    break;
-                default:
-                    setError('Erro na autenticação. Tente novamente mais tarde.');
-            }
+            console.error('Erro de rede ou servidor:', err);
+            setError('Não foi possível conectar ao servidor. Tente novamente mais tarde.');
         }
     };
 
@@ -80,7 +70,7 @@ const LoginScreen: React.FC = () => {
                             <ChamberIcon className="w-10 h-10" />
                         </div>
                         <h1 className="text-2xl font-bold text-brand-text-primary">ThermoCert Pro</h1>
-                        <p className="text-brand-text-secondary">{isRegistering ? 'Crie sua conta de teste' : 'Acesse sua conta para continuar'}</p>
+                        <p className="text-brand-text-secondary">{isRegistering ? 'Crie sua conta' : 'Acesse sua conta para continuar'}</p>
                     </div>
 
                     {error && (
@@ -108,19 +98,19 @@ const LoginScreen: React.FC = () => {
                             </div>
                         )}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-brand-text-secondary mb-1">
-                                E-mail
+                            <label htmlFor="username" className="block text-sm font-medium text-brand-text-secondary mb-1">
+                                E-mail ou Usuário
                             </label>
                             <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
+                                id="username"
+                                name="username"
+                                type="text" // Pode ser text ou email, dependendo se aceita username ou email para login
+                                autoComplete="username" // ou "email"
                                 required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 className="w-full bg-slate-50 border border-brand-border rounded-md shadow-sm py-2 px-3 text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                                placeholder="seu@email.com"
+                                placeholder="ex: seu@email.com ou seu_usuario"
                             />
                         </div>
 
@@ -156,7 +146,7 @@ const LoginScreen: React.FC = () => {
                             onClick={() => setIsRegistering(!isRegistering)}
                             className="text-sm text-brand-primary hover:underline"
                         >
-                            {isRegistering ? 'Já tem conta? Faça login' : 'Não tem conta? Cadastre-se para testar'}
+                            {isRegistering ? 'Já tem conta? Faça login' : 'Não tem conta? Cadastre-se'}
                         </button>
                     </div>
 

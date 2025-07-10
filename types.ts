@@ -3,18 +3,11 @@
 export interface User {
     _id: string; 
     username: string;
-    email?: string; // Adicionado email, pois o Firebase Auth usa
     name: string;
     isActive: boolean;
     isAdmin: boolean; 
-    permissions?: { // NOVO: Permissões modulares, tornando-o opcional para flexibilidade
-      canEdit?: boolean;
-      canGeneratePdf?: boolean;
-      canGenerateDocx?: boolean;
-      canGenerateExcel?: boolean;
-      canAccessAdmin?: boolean;
-      isTestMode?: boolean; 
-    };
+    // permissions: { ... }  <-- REMOVIDO para a arquitetura atual
+    // email?: string;       <-- REMOVIDO para a arquitetura atual
 }
 
 export interface ArkmedsMeasure {
@@ -87,7 +80,7 @@ export interface TestSummary {
 }
 
 export interface TestResult {
-  id?: string; // ID do teste, pode ser gerado dinamicamente
+  id?: string; 
   name: string;
   summary: TestSummary;
   rawData: SensorDataRow[];
@@ -117,7 +110,7 @@ export enum QualificationType {
 
 export interface AppState {
   currentUser: User | null;
-  currentStep: 'login' | 'upload' | 'config' | 'editor' | 'admin' | 'payment'; // Adicionado 'payment'
+  currentStep: 'login' | 'upload' | 'config' | 'editor' | 'admin'; // 'payment' removido
   qualificationType: QualificationType;
   config: ReportConfig;
   textBlocks: ReportTextBlocks;
@@ -129,7 +122,7 @@ export interface AppState {
   calibrationCertificate: File | null;
   isGeneratingPdf: boolean;
   isGeneratingWord: boolean;
-  users: User[]; // Mantido para o contexto de listagem de usuários no AdminScreen
+  users: User[]; 
 }
 
 export type AppAction =
