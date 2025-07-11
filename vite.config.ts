@@ -1,13 +1,12 @@
+// thermoquali-pro/vite.config.ts
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react'; 
+import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, process.cwd(), '');
+    const env = loadEnv(mode, process.cwd(), ''); 
 
     const define = {
-        // As variáveis VITE_... serão injetadas automaticamente pelo Vite,
-        // mas explicitá-las aqui pode ajudar na depuração ou em setups específicos.
         'process.env.VITE_FIREBASE_API_KEY': JSON.stringify(env.VITE_FIREBASE_API_KEY),
         'process.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(env.VITE_FIREBASE_AUTH_DOMAIN),
         'process.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(env.VITE_FIREBASE_PROJECT_ID),
@@ -21,11 +20,11 @@ export default defineConfig(({ mode }) => {
     return {
       plugins: [react()], 
       define: define, 
-      root: 'public', // <--- Importante: Indica que o index.html está na pasta 'public'
+      root: 'public', // <--- Importante: Vite vai procurar o index.html aqui
 
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, './src'), // Alias para a pasta 'src'
+          '@': path.resolve(__dirname, './src'), 
         }
       },
       server: {
@@ -39,7 +38,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       build: {
-        outDir: '../dist', // O diretório de saída 'dist' ficará na raiz do projeto
+        outDir: '../dist', // <--- Importante: Saída 'dist' um nível acima de 'public'
       },
     };
 });
