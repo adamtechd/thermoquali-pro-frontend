@@ -20,11 +20,11 @@ export default defineConfig(({ mode }) => {
     return {
       plugins: [react()], 
       define: define, 
-      root: 'public', // <--- Importante: Vite vai procurar o index.html aqui
+      root: 'public', // <--- PONTO CHAVE: Vite começará a procurar em 'public' para o index.html
 
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, './src'), 
+          '@': path.resolve(__dirname, './src'), // Alias para a pasta 'src'
         }
       },
       server: {
@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       build: {
-        outDir: '../dist', // <--- Importante: Saída 'dist' um nível acima de 'public'
+        outDir: '../dist', // <--- PONTO CHAVE: O resultado do build (dist) estará na raiz do projeto (irmão de public e src)
       },
     };
 });
