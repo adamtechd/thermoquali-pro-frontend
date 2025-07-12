@@ -14,25 +14,22 @@ import { QualificationType } from './types';
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
 
-  // NOVO: Efeito para carregar o currentUser do backend Node.js (via JWT)
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && !state.currentUser) {
       const fetchUserFromBackend = async () => {
         try {
-          // Chama o backend para validar o token e obter os dados do usuário
           const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/me', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}` // Envia o token JWT
+              'Authorization': `Bearer ${token}` 
             }
           });
           if (response.ok) {
             const userData = await response.json(); 
             dispatch({ type: 'LOGIN', payload: { user: userData, token: token } });
           } else {
-            // Token inválido ou expirado, limpa e redireciona para login
             localStorage.removeItem('token');
             dispatch({ type: 'LOGOUT' }); 
           }
@@ -44,13 +41,12 @@ const AppContent = () => {
       };
       fetchUserFromBackend();
     } else if (!token && state.currentStep !== 'login') {
-      // Se não tem token e não está na tela de login, força o login
       dispatch({ type: 'SET_STEP', payload: 'login' });
     }
   }, [state.currentUser, dispatch, state.currentStep]);
 
   const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' }); // Faz logout do AppContext, que limpa o token
+    dispatch({ type: 'LOGOUT' }); 
   };
   
   const handleGoToAdmin = () => {
@@ -62,15 +58,14 @@ const AppContent = () => {
   }
 
   if (!state.currentUser && state.currentStep !== 'login') {
-    return <LoginScreen />; // Garante que a tela de login apareça se não houver usuário logado
+    return <LoginScreen />; 
   }
   
-  // Acesso ao admin é baseado na propriedade 'isAdmin' do usuário
   const isAdmin = state.currentUser?.isAdmin;
 
   const renderContent = () => {
     if (!state.currentUser && state.currentStep !== 'login') {
-      return <LoginScreen />; // Redundante, mas garante que não há conteúdo sem login
+      return <LoginScreen />; 
     }
 
     switch (state.currentStep) {
@@ -83,9 +78,9 @@ const AppContent = () => {
         case 'admin':
             return isAdmin ? <AdminScreen /> : <p className="text-red-600 text-center text-lg mt-10">Acesso negado. Você não tem permissão para acessar esta página.</p>;
         // case 'payment': 
-        //    return <PaymentScreen />; // Descomente se tiver PaymentScreen
+        //    return <PaymentScreen />; 
         default:
-            return <LoginScreen />; // Volta para o login se o estado for indefinido
+            return <LoginScreen />; 
     }
   }
 
@@ -109,7 +104,7 @@ const AppContent = () => {
                     <span>Admin</span>
                 </button>
              )}
-             {state.currentUser && ( // Botão de Sair só aparece se houver usuário logado
+             {state.currentUser && (
                 <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 border border-white/50 rounded-md text-sm hover:bg-white/10 transition-colors">
                     <span>Sair</span>
                     <LogoutIcon className="w-4 h-4" />
