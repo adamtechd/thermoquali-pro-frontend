@@ -5,10 +5,10 @@ import type {
 } from '../types'; 
 import { QualificationType } from '../types'; 
 
-// Importa o auth e db do Firebase
-import { auth, db } from '../services/firebase'; 
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore'; 
+// Remover importações do Firebase, pois não estamos usando
+// import { auth, db } from '../services/firebase'; 
+// import { onAuthStateChanged } from 'firebase/auth';
+// import { doc, getDoc } from 'firebase/firestore'; 
 
 const chamberTextBlocks: ReportTextBlocks = {
     introduction: "Este relatório detalha os procedimentos e resultados da qualificação térmica realizada em conformidade com as diretrizes da norma ABNT NBR 16328 e RDC 430/2020. A qualificação térmica de câmaras de conservação é um procedimento essencial para garantir a conformidade e a confiabilidade de equipamentos utilizados na armazenagem de produtos que requerem condições térmicas controladas. Esse processo é especialmente crítico em setores como o farmacêutico, alimentício e hospitalar, onde a manutenção de temperaturas específicas é indispensável para preservar a integridade e a qualidade dos produtos.\n\nO procedimento de qualificação térmica envolve uma série de testes e análises destinados a verificar se a câmara opera dentro dos padrões exigidos pelas normas regulatórias aplicáveis, incluindo a verificação da uniformidade de temperatura, estabilidade térmica e desempenho do sistema de controle, entre outros parâmetros.",
