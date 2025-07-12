@@ -21,8 +21,10 @@ const autoclaveDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDes
     chainType: 'Quente',
 };
 
+// --- ESTAS SÃO AS ÚNICAS DECLARAÇÕES DE chamberTestNames e autoclaveTestNames ---
 const chamberTestNames = ['Ensaio de Distribuição Térmica (24h)', 'Ensaio de Porta Aberta', 'Ensaio de Queda de Energia'];
 const autoclaveTestNames = ['Ensaio de Penetração de Vapor (Bowie-Dick)', 'Ciclo de Esterilização 121°C', 'Ciclo de Esterilização 134°C', 'Ensaio com Indicador Biológico'];
+// -----------------------------------------------------------------------------
 
 const chamberTextBlocks: ReportTextBlocks = {
     introduction: "Este relatório detalha os procedimentos e resultados da qualificação térmica realizada em conformidade com as diretrizes da norma ABNT NBR 16328 e RDC 430/2020. A qualificação térmica de câmaras de conservação é um procedimento essencial para garantir a conformidade e a confiabilidade de equipamentos utilizados na armazenagem de produtos que requerem condições térmicas controladas. Esse processo é especialmente crítico em setores como o farmacêutico, alimentício e hospitalar, onde a manutenção de temperaturas específicas é indispensável para preservar a integridade e a qualidade dos produtos.\n\nO procedimento de qualificação térmica envolve uma série de testes e análises destinados a verificar se a câmara opera dentro dos padrões exigidos pelas normas regulatórias aplicáveis, incluindo a verificação da uniformidade de temperatura, estabilidade térmica e desempenho do sistema de controle, entre outros parâmetros.",
@@ -120,9 +122,6 @@ const getDefaultTextsForTest = (testName: string, type: QualificationType) => {
         }
     }
 }
-
-const chamberTestNames = ['Ensaio de Distribuição Térmica (24h)', 'Ensaio de Porta Aberta', 'Ensaio de Queda de Energia'];
-const autoclaveTestNames = ['Ensaio de Penetração de Vapor (Bowie-Dick)', 'Ciclo de Esterilização 121°C', 'Ciclo de Esterilização 134°C', 'Ensaio com Indicador Biológico'];
 
 const calculateF0 = (rawData: SensorDataRow[]): { f0Results: { sensor: string, f0: number }[], minF0: number } => {
     if (rawData.length < 2) return { f0Results: [], minF0: 0 };

@@ -1,38 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { User } from '../types';
+import { User } from '../types'; 
 
 const AdminScreen: React.FC = () => {
     const { state } = useAppContext();
-    const [newUser, setNewUser] = useState({ username: '', password: '', name: '', email: '' }); // Adicionado email para registro
+    const [newUser, setNewUser] = useState({ username: '', password: '', name: '', email: '' }); 
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Funções de toggle de permissões (NOVO no backend Node.js)
-    const togglePermission = async (userId: string, permission: keyof User['permissions'], currentValue: boolean) => {
+    // Permissões que serão controladas no AdminScreen
+    const allPermissions: (keyof User['permissions'])[] = [
+        'canEdit', 'canGeneratePdf', 'canGenerateDocx', 'canGenerateExcel', 'canAccessAdmin', 'isTestMode'
+    ];
+
+    const togglePermission = async (userId: string, permission: keyof User['permissions'] | 'isAdmin', currentValue: boolean) => {
         setError(null);
         try {
-            // Requisição PATCH para atualizar permissões no backend
             const token = localStorage.getItem('token');
             if (!token) {
                 setError('Token de autenticação não encontrado. Faça login novamente.');
                 return;
             }
 
-            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/permissions`, { // Rota para atualizar permissões
+            // Para prevenir que o admin logado altere suas próprias permissões críticas
+            if (state.currentUser?._id === userId && (permission === 'isAdmin' || permission === 'canAccessAdmin' || permission === 'isActive')) {
+                alert("Você não pode alterar seu próprio status de administrador, acesso ao painel ou status ativo.");
+                return;
+            }
+
+            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}/permissions`, { 
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ permission, value: !currentValue }) // Envia a permissão e o novo valor
+                body: JSON.stringify({ permission, value: !currentValue }) 
             });
             const data = await response.json();
 
             if (response.ok) {
                 alert(`Permissão ${permission} atualizada com sucesso para ${data.user.name}!`);
-                fetchUsers(); // Recarrega a lista de usuários
+                fetchUsers(); 
             } else {
                 setError(data.message || `Falha ao atualizar permissão ${permission}.`);
             }
@@ -291,10 +300,17 @@ const AdminScreen: React.FC = () => {
                                             </td>
                                             <td className="px-4 py-3 text-center text-xs text-brand-text-secondary">
                                                 <div className="flex flex-wrap justify-center gap-1">
-                                                    {Object.entries(user.permissions || {}).map(([key, value]) => (
-                                                        <span key={key} className="inline-block bg-slate-100 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-700">
-                                                            {key.replace('can', '').replace('is', '')}: {value ? '✅' : '❌'}
-                                                        </span>
+                                                    {allPermissions.map(perm => ( // Mapeia todas as permissões definidas
+                                                        <label key={perm} className="flex items-center gap-1">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={user.permissions?.[perm] || false}
+                                                                onChange={() => togglePermission(user._id, perm, user.permissions?.[perm] || false)}
+                                                                disabled={!state.currentUser?.isAdmin} // APENAS ADMIN PODE CLICAR
+                                                                className="form-checkbox h-4 w-4 text-brand-primary rounded"
+                                                            />
+                                                            {perm.replace('can', '').replace('is', '')}
+                                                        </label>
                                                     ))}
                                                 </div>
                                             </td>
@@ -303,7 +319,7 @@ const AdminScreen: React.FC = () => {
                                                     onClick={() => handleToggleStatus(user._id, user.isActive)}
                                                     disabled={state.currentUser?._id === user._id && user.isAdmin}
                                                     className={`py-1 px-3 text-xs font-medium rounded-md transition-colors ${
-                                                        (state.currentUser?._id === user._id && user.isAdmin) ? 'cursor-not-allowed opacity-50 bg-slate-200' 
+                                                        (!state.currentUser?.isAdmin || (state.currentUser?._id === user._id && user.isAdmin)) ? 'cursor-not-allowed opacity-50 bg-slate-200' 
                                                         : user.isActive ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
                                                     }`}
                                                 >

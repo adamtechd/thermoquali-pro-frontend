@@ -3,11 +3,18 @@
 export interface User {
     _id: string; 
     username: string;
+    email: string; // Adicionado email como obrigatório
     name: string;
     isActive: boolean;
     isAdmin: boolean; 
-    // permissions: { ... }  <-- REMOVIDO para a arquitetura atual
-    // email?: string;       <-- REMOVIDO para a arquitetura atual
+    permissions: { // Estrutura de permissões modulares
+      canEdit: boolean;
+      canGeneratePdf: boolean;
+      canGenerateDocx: boolean;
+      canGenerateExcel: boolean;
+      canAccessAdmin: boolean;
+      isTestMode: boolean; 
+    };
 }
 
 export interface ArkmedsMeasure {
@@ -110,7 +117,7 @@ export enum QualificationType {
 
 export interface AppState {
   currentUser: User | null;
-  currentStep: 'login' | 'upload' | 'config' | 'editor' | 'admin'; // 'payment' removido
+  currentStep: 'login' | 'upload' | 'config' | 'editor' | 'admin' | 'payment'; 
   qualificationType: QualificationType;
   config: ReportConfig;
   textBlocks: ReportTextBlocks;
