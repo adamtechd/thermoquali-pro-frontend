@@ -5,10 +5,24 @@ import type {
 } from '../types'; 
 import { QualificationType } from '../types'; 
 
-// Remover importações do Firebase, pois não estamos usando
-// import { auth, db } from '../services/firebase'; 
-// import { onAuthStateChanged } from 'firebase/auth';
-// import { doc, getDoc } from 'firebase/firestore'; 
+const chamberDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDescription' | 'targetTemperature' | 'qualificationPhase' | 'chainType'> = {
+    equipmentType: 'Câmara de Conservação',
+    equipmentDescription: 'CÂMARA DE CONSERVAÇÃO',
+    targetTemperature: '5.0',
+    qualificationPhase: 'QP',
+    chainType: 'Fria',
+};
+
+const autoclaveDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDescription' | 'targetTemperature' | 'qualificationPhase' | 'chainType'> = {
+    equipmentType: 'Autoclave',
+    equipmentDescription: 'AUTOCLAVE A VAPOR',
+    targetTemperature: '121.0',
+    qualificationPhase: 'QP',
+    chainType: 'Quente',
+};
+
+const chamberTestNames = ['Ensaio de Distribuição Térmica (24h)', 'Ensaio de Porta Aberta', 'Ensaio de Queda de Energia'];
+const autoclaveTestNames = ['Ensaio de Penetração de Vapor (Bowie-Dick)', 'Ciclo de Esterilização 121°C', 'Ciclo de Esterilização 134°C', 'Ensaio com Indicador Biológico'];
 
 const chamberTextBlocks: ReportTextBlocks = {
     introduction: "Este relatório detalha os procedimentos e resultados da qualificação térmica realizada em conformidade com as diretrizes da norma ABNT NBR 16328 e RDC 430/2020. A qualificação térmica de câmaras de conservação é um procedimento essencial para garantir a conformidade e a confiabilidade de equipamentos utilizados na armazenagem de produtos que requerem condições térmicas controladas. Esse processo é especialmente crítico em setores como o farmacêutico, alimentício e hospitalar, onde a manutenção de temperaturas específicas é indispensável para preservar a integridade e a qualidade dos produtos.\n\nO procedimento de qualificação térmica envolve uma série de testes e análises destinados a verificar se a câmara opera dentro dos padrões exigidos pelas normas regulatórias aplicáveis, incluindo a verificação da uniformidade de temperatura, estabilidade térmica e desempenho do sistema de controle, entre outros parâmetros.",
@@ -28,22 +42,6 @@ const autoclaveTextBlocks: ReportTextBlocks = {
     cycleConfig: "Ciclos de esterilização parametrizados para qualificação de desempenho, incluindo testes de penetração de vapor e desafios com indicadores biológicos, conforme as cargas e configurações de rotina do equipamento.",
     instrumentation: "Todos os certificados de calibração encontram-se em anexo.\n\n7.1 Sensores\n\n7.1.1 Módulo de aquisição de dados\n\n• Otto, Analisador de Qualificação Térmica, Arkmeds, com 16 canais de temperatura e 1 canal de pressão.\n• Calibrado usando padrão Analisador de Qualificação Térmica ARKMEDS OTTO tag: AN-001 ns: 02C2V2134D6F2 com precisão de 0.5.",
     conclusion: "Com base nos resultados, conclui-se que a autoclave atendeu aos critérios de aceitação para a qualificação de desempenho. O equipamento demonstra ser capaz de realizar ciclos de esterilização eficazes e reprodutíveis, estando apto para o uso em rotina, conforme as cargas qualificadas. Recomenda-se a requalificação periódica conforme RDC 15/2012.",
-};
-
-const chamberDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDescription' | 'targetTemperature' | 'qualificationPhase' | 'chainType'> = {
-    equipmentType: 'Câmara de Conservação',
-    equipmentDescription: 'CÂMARA DE CONSERVAÇÃO',
-    targetTemperature: '5.0',
-    qualificationPhase: 'QP',
-    chainType: 'Fria',
-};
-
-const autoclaveDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDescription' | 'targetTemperature' | 'qualificationPhase' | 'chainType'> = {
-    equipmentType: 'Autoclave',
-    equipmentDescription: 'AUTOCLAVE A VAPOR',
-    targetTemperature: '121.0',
-    qualificationPhase: 'QP',
-    chainType: 'Quente',
 };
 
 const initialState: AppState = {
@@ -474,7 +472,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && !state.currentUser) {
-      const fetchUserFromToken = async () => {
+      const fetchUserFromBackend = async () => {
         try {
           const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/me', {
             method: 'GET',
@@ -496,7 +494,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           dispatch({ type: 'LOGOUT' });
         }
       };
-      fetchUserFromToken();
+      fetchUserFromBackend();
     }
   }, [state.currentUser, dispatch]); 
 

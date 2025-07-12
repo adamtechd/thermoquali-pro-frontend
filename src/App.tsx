@@ -5,7 +5,7 @@ import ConfigScreen from './screens/ConfigScreen';
 import ReportEditorScreen from './screens/ReportEditorScreen';
 import LoginScreen from './screens/LoginScreen';
 import AdminScreen from './screens/AdminScreen'; 
-import PaymentScreen from './screens/PaymentScreen'; // Mantenha se for usar a tela de pagamento
+import PaymentScreen from './screens/PaymentScreen'; 
 
 import { ChamberIcon, AutoclaveIcon, LogoutIcon, AdminIcon } from './components/icons'; 
 import { QualificationType } from './types';
@@ -13,7 +13,6 @@ import { QualificationType } from './types';
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
 
-  // NOVO: Efeito para carregar o currentUser do backend Node.js (via JWT)
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && !state.currentUser) {
@@ -104,7 +103,7 @@ const AppContent = () => {
                     <span>Admin</span>
                 </button>
              )}
-             {state.currentUser && (
+             {state.currentUser && ( 
                 <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 border border-white/50 rounded-md text-sm hover:bg-white/10 transition-colors">
                     <span>Sair</span>
                     <LogoutIcon className="w-4 h-4" />
