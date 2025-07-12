@@ -279,7 +279,7 @@ const AdminScreen: React.FC = () => {
                                                     type="checkbox"
                                                     checked={user.isAdmin}
                                                     onChange={() => togglePermission(user._id, 'isAdmin', user.isAdmin)}
-                                                    disabled={state.currentUser?._id === user._id}
+                                                    disabled={!state.currentUser?.isAdmin || (state.currentUser?._id === user._id)} // Admin só pode mudar isAdmin de outros
                                                     className="form-checkbox h-4 w-4 text-brand-primary rounded"
                                                 />
                                             </td>
@@ -288,6 +288,7 @@ const AdminScreen: React.FC = () => {
                                                     type="checkbox"
                                                     checked={user.permissions?.isTestMode || false}
                                                     onChange={() => togglePermission(user._id, 'isTestMode', user.permissions?.isTestMode || false)}
+                                                    disabled={!state.currentUser?.isAdmin} // Admin só pode mudar isTestMode
                                                     className="form-checkbox h-4 w-4 text-brand-primary rounded"
                                                 />
                                             </td>
@@ -300,7 +301,7 @@ const AdminScreen: React.FC = () => {
                                             </td>
                                             <td className="px-4 py-3 text-center text-xs text-brand-text-secondary">
                                                 <div className="flex flex-wrap justify-center gap-1">
-                                                    {allPermissions.map(perm => ( // Mapeia todas as permissões definidas
+                                                    {allPermissions.map(perm => ( 
                                                         <label key={perm} className="flex items-center gap-1">
                                                             <input
                                                                 type="checkbox"
@@ -317,7 +318,7 @@ const AdminScreen: React.FC = () => {
                                             <td className="px-4 py-3 text-center">
                                                 <button
                                                     onClick={() => handleToggleStatus(user._id, user.isActive)}
-                                                    disabled={state.currentUser?._id === user._id && user.isAdmin}
+                                                    disabled={!state.currentUser?.isAdmin || (state.currentUser?._id === user._id && user.isAdmin)}
                                                     className={`py-1 px-3 text-xs font-medium rounded-md transition-colors ${
                                                         (!state.currentUser?.isAdmin || (state.currentUser?._id === user._id && user.isAdmin)) ? 'cursor-not-allowed opacity-50 bg-slate-200' 
                                                         : user.isActive ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'

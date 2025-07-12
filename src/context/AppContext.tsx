@@ -2,8 +2,8 @@ import React, { createContext, useReducer, Dispatch, useContext, useEffect } fro
 import type { 
     AppState, AppAction, SensorDataRow, TestResult, RawArkmedsData, 
     ReportTextBlocks, ReportConfig, User 
-} from '../types';
-import { QualificationType } from '../types';
+} from '../types'; 
+import { QualificationType } from '../types'; 
 
 const chamberDefaultConfig: Pick<ReportConfig, 'equipmentType' | 'equipmentDescription' | 'targetTemperature' | 'qualificationPhase' | 'chainType'> = {
     equipmentType: 'Câmara de Conservação',
@@ -30,7 +30,7 @@ const chamberTextBlocks: ReportTextBlocks = {
     responsibilities: "Contratado\n• Realizar e interpretar os ensaios de qualificação.\n• Elaborar o relatório de validação.\n\nContratante\n• Disponibilizar um profissional para acompanhar os serviços.\n• Disponibilizar as informações características do equipamento, incluindo manuais e protocolos de instalação.\n• Disponibilizar os equipamentos em perfeitas condições, dentro do cronograma de atividades.\n• Disponibilizar os materiais utilizados na etapa de qualificação de desempenho.\n• Revisão e aprovação final do relatório fornecido pelo contratado.",
     termDefinitions: "Amplitude de temperatura: Diferença entre a maior e menor medição de temperatura, para um mesmo instante.\n\nCalibração: É a operação que estabelece, sob condições especificadas, em uma primeira etapa, uma relação entre os valores e as incertezas de medição fornecidos por padrões e as indicações correspondentes com as incertezas associadas; numa segunda etapa, utiliza esta informação para estabelecer uma relação visando a obtenção de um resultado de medição a partir de uma indicação.\n\nCarga crítica: Também chamada de carga de maior desafio, é definida como a carga utilizada na qualificação de desempenho, cujo desafio representa o pior cenário na rotina de serviço.",
     cycleConfig: `Ciclo parametrizado - Ensaio de distribuição térmica\nAplicação: Qualificação térmica da câmara de conservação\n\nCiclo parametrizado - Ensaio porta aberta\nAplicação: Qualificação térmica da câmara de conservação\n\nCiclo parametrizado - Ensaio falta de rede\nAplicação: Qualificação térmica da câmara de conservação`,
-    instrumentation: "Todos os certificados de calibração encontram-se em anexo.\n\n7.1 Sensores\n\n7.1.1 Módulo de aquisição de dados\n\n• Otto, Analisador de Qualificação Térmica, Arkmeds, com 16 canais de temperatura e 1 canal de pressão.\n• Calibrado usando padrão Analisador de Qualificação Térmica ARKMEDS OTTO tag: AN-001 ns: 02C2V2134D6F2 com precisão de 0.5.\n\n7.1.2 Medidor de umidade\n\n• Sensor de umidade\n• Calibrado usando padrão TERMO-HIGRO-ANE-DECIBELIMETRO-LUXÍMETRO NOVOTEST DT-859B ns: 201107196, com precisão de 0.5.",
+    instrumentation: "Todos os certificados de calibração encontram-se em anexo.\n\n7.1 Sensores\n\n7.1.1 Módulo de aquisição de dados\n\n• Otto, Analisador de Qualificação Térmica, Arkmeds, com 16 canais de temperatura e 1 canal de pressão.\n• Calibrado usando padrão Analisador de Qualificação Térmica ARKMEDS OTTO tag: AN-001 ns: 02C2V2134D6F2 com precisão de 0.5.",
     conclusion: "Com base nos testes realizados e nos resultados obtidos, conclui-se que a câmara de conservação atendeu aos requisitos estabelecidos para a qualificação térmica. O equipamento está em conformidade com os padrões regulatórios e é adequado para a armazenagem de produtos sob condições térmicas controladas.\n\nA validade deste certificado de qualificação é de 12 meses, contados a partir da data de emissão. Caso o equipamento passe por qualquer processo de manutenção que possa impactar seu desempenho térmico, é obrigatória a realização de uma nova qualificação para assegurar a sua conformidade e desempenho adequado.",
 };
 
@@ -227,8 +227,8 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         return { ...state, textBlocks: { ...state.textBlocks, [action.payload.key]: action.payload.value } };
     case 'LOAD_DATA': {
         const { rawJsonDataArray } = action.payload;
-        let updatedConfig = { ...state.config }; // <--- Declarado aqui
-        let finalTests: TestResult[] = []; // <--- Declarado aqui
+        let updatedConfig = { ...state.config }; 
+        let finalTests: TestResult[] = []; 
 
         if (rawJsonDataArray.length === 0) {
             const testNames = state.qualificationType === QualificationType.CHAMBER ? chamberTestNames : autoclaveTestNames;
@@ -266,7 +266,6 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
                 return testResult;
             });
             
-            // updatedConfig já está inicializado no início do bloco
         } else {
             const allConfigurations = rawJsonDataArray.flatMap(data => data.configurations);
 
@@ -341,7 +340,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
                 };
 
                 if (state.qualificationType === QualificationType.AUTOCLAVE) {
-                    const { f0Results, minF0 } = calculateF0(testResult.rawData); // <--- CORREÇÃO AQUI
+                    const { f0Results, minF0 } = calculateF0(testResult.rawData); 
                     testResult.f0Results = f0Results;
                     testResult.summary.f0 = minF0;
                     if (minF0 < 15) {
@@ -364,7 +363,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
             });
 
             const mainData: Partial<RawArkmedsData> = rawJsonDataArray[0] || {};
-            updatedConfig = { // <--- Atribui à variável já declarada
+            updatedConfig = { 
                 ...state.config,
                 serialNumber: mainData.serial_number || state.config.serialNumber,
                 targetTemperature: mainData.configurations?.[0]?.temperature || state.config.targetTemperature,
@@ -373,8 +372,8 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 
         return {
             ...state,
-            config: updatedConfig, // Garante que updatedConfig é sempre usado aqui
-            tests: finalTests, // Garante que finalTests é sempre usado aqui
+            config: updatedConfig, 
+            tests: finalTests, 
         };
     }
 
@@ -415,7 +414,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         const chamberAvg = testToUpdate.rawData.length > 0 ? totalAvg / rawData.length : 0;
     
         testToUpdate.summary = {
-            ...testToUpdate.summary, // <--- CORREÇÃO: Usa testToUpdate.summary para manter propriedades existentes
+            ...testToUpdate.summary, 
             min: parseFloat(overallMin.toFixed(1)),
             max: parseFloat(overallMax.toFixed(1)),
             chamber: parseFloat(chamberAvg.toFixed(1)),

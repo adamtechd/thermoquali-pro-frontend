@@ -4,9 +4,9 @@ import { ChamberIcon } from '../components/icons';
 
 const LoginScreen: React.FC = () => {
     const { dispatch } = useAppContext();
-    const [username, setUsername] = useState(''); // Usado como loginIdentifier (email ou username)
+    const [username, setUsername] = useState(''); 
     const [password, setPassword] = useState('');
-    const [name, setName] = useState(''); // Para cadastro
+    const [name, setName] = useState(''); 
     const [isRegistering, setIsRegistering] = useState(false); 
     const [error, setError] = useState('');
 
@@ -16,20 +16,19 @@ const LoginScreen: React.FC = () => {
 
         try {
             if (isRegistering) {
-                // Lógica de Cadastro com Backend Node.js/MongoDB
                 const response = await fetch('https://thermocert-api-backend.onrender.com/api/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ username: username, password: password, name: name, email: username }), // Usando username como email para cadastro
+                    body: JSON.stringify({ username: username, password: password, name: name, email: username }), 
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
                     alert('Cadastro realizado com sucesso! Faça login.');
-                    setIsRegistering(false); // Volta para tela de login
+                    setIsRegistering(false); 
                     setUsername('');
                     setPassword('');
                     setName('');
@@ -38,13 +37,12 @@ const LoginScreen: React.FC = () => {
                 }
 
             } else {
-                // Lógica de Login com Backend Node.js/MongoDB
                 const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ loginIdentifier: username, password: password }), // Envia 'username' como 'loginIdentifier'
+                    body: JSON.stringify({ loginIdentifier: username, password: password }), 
                 });
 
                 const data = await response.json();
@@ -104,8 +102,8 @@ const LoginScreen: React.FC = () => {
                             <input
                                 id="username"
                                 name="username"
-                                type="text" // Pode ser text ou email, dependendo se aceita username ou email para login
-                                autoComplete="username" // ou "email"
+                                type="text" 
+                                autoComplete="username" 
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
