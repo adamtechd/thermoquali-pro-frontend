@@ -9,7 +9,6 @@ const AdminScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Permissões que serão controladas no AdminScreen
     const allPermissions: (keyof User['permissions'])[] = [
         'canEdit', 'canGeneratePdf', 'canGenerateDocx', 'canGenerateExcel', 'canAccessAdmin', 'isTestMode'
     ];
@@ -23,7 +22,6 @@ const AdminScreen: React.FC = () => {
                 return;
             }
 
-            // Para prevenir que o admin logado altere suas próprias permissões críticas
             if (state.currentUser?._id === userId && (permission === 'isAdmin' || permission === 'canAccessAdmin' || permission === 'isActive')) {
                 alert("Você não pode alterar seu próprio status de administrador, acesso ao painel ou status ativo.");
                 return;
@@ -175,6 +173,45 @@ const AdminScreen: React.FC = () => {
         }
     };
 
+    // NOVO: Função para deletar um usuário
+    const handleDeleteUser = async (userId: string, userName: string) => {
+        setError(null);
+        if (!window.confirm(`Tem certeza que deseja deletar o usuário ${userName}? Esta ação é irreversível.`)) {
+            return;
+        }
+
+        if (state.currentUser?._id === userId) {
+            alert("Você não pode deletar o seu próprio usuário.");
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setError('Token de autenticação não encontrado. Faça login novamente.');
+                return;
+            }
+
+            const response = await fetch(`https://thermocert-api-backend.onrender.com/api/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(`Usuário ${userName} deletado com sucesso!`);
+                fetchUsers(); // Recarrega a lista
+            } else {
+                setError(data.message || 'Falha ao deletar usuário.');
+            }
+        } catch (err) {
+            console.error('Erro ao deletar usuário:', err);
+            setError('Não foi possível conectar ao servidor para deletar usuário.');
+        }
+    };
+
     return (
         <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 bg-brand-surface rounded-xl shadow-lg">
             <h2 className="text-2xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
@@ -279,7 +316,7 @@ const AdminScreen: React.FC = () => {
                                                     type="checkbox"
                                                     checked={user.isAdmin}
                                                     onChange={() => togglePermission(user._id, 'isAdmin', user.isAdmin)}
-                                                    disabled={!state.currentUser?.isAdmin || (state.currentUser?._id === user._id)} // Admin só pode mudar isAdmin de outros
+                                                    disabled={!state.currentUser?.isAdmin || (state.currentUser?._id === user._id)} 
                                                     className="form-checkbox h-4 w-4 text-brand-primary rounded"
                                                 />
                                             </td>
@@ -288,7 +325,7 @@ const AdminScreen: React.FC = () => {
                                                     type="checkbox"
                                                     checked={user.permissions?.isTestMode || false}
                                                     onChange={() => togglePermission(user._id, 'isTestMode', user.permissions?.isTestMode || false)}
-                                                    disabled={!state.currentUser?.isAdmin} // Admin só pode mudar isTestMode
+                                                    disabled={!state.currentUser?.isAdmin} 
                                                     className="form-checkbox h-4 w-4 text-brand-primary rounded"
                                                 />
                                             </td>
@@ -307,7 +344,7 @@ const AdminScreen: React.FC = () => {
                                                                 type="checkbox"
                                                                 checked={user.permissions?.[perm] || false}
                                                                 onChange={() => togglePermission(user._id, perm, user.permissions?.[perm] || false)}
-                                                                disabled={!state.currentUser?.isAdmin} // APENAS ADMIN PODE CLICAR
+                                                                disabled={!state.currentUser?.isAdmin} 
                                                                 className="form-checkbox h-4 w-4 text-brand-primary rounded"
                                                             />
                                                             {perm.replace('can', '').replace('is', '')}
@@ -325,6 +362,17 @@ const AdminScreen: React.FC = () => {
                                                     }`}
                                                 >
                                                     {user.isActive ? 'Desativar' : 'Ativar'}
+                                                </button>
+                                                {/* NOVO: Botão Excluir */}
+                                                <button
+                                                    onClick={() => handleDeleteUser(user._id, user.name)}
+                                                    disabled={!state.currentUser?.isAdmin || state.currentUser?._id === user._id}
+                                                    className={`ml-2 py-1 px-3 text-xs font-medium rounded-md transition-colors ${
+                                                        (!state.currentUser?.isAdmin || state.currentUser?._id === user._id) ? 'cursor-not-allowed opacity-50 bg-slate-200' 
+                                                        : 'bg-red-700 text-white hover:bg-red-800'
+                                                    }`}
+                                                >
+                                                    Excluir
                                                 </button>
                                             </td>
                                         </tr>
