@@ -14,25 +14,25 @@
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "pdf-lib": "^1.17.1",
-    "react": "^18.2.0",            // <--- MUDANÇA AQUI
-    "react-dom": "^18.2.0",         // <--- MUDANÇA AQUI
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.8",
-    "react-router-dom": "^6.22.3",  // <--- MUDANÇA AQUI (para v6 estável)
+    "react-router-dom": "^6.22.3",
     "recharts": "^3.0.2",
-    "autoprefixer": "^10.4.19",     // Já está aqui
-    "postcss": "^8.4.38",          // Já está aqui
-    "tailwindcss": "^3.4.3",       // Já está aqui
-    "vite": "^5.2.0"               // Já está aqui (seria bom alinhar com devDependencies)
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "vite": "^5.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
-    "@types/react": "^18.2.55",      // <--- MUDANÇA AQUI (para React 18 types)
-    "@types/react-dom": "^18.2.19",  // <--- MUDANÇA AQUI (para ReactDOM 18 types)
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.6.0",
-    "autoprefixer": "^10.4.21",      // Já está aqui
-    "postcss": "^8.5.6",           // Já está aqui
-    "tailwindcss": "^4.1.11",      // Já está aqui
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "typescript": "~5.7.2",
-    "vite": "^6.2.0"                // Já está aqui
+    "vite": "^6.2.0"
   }
 }
