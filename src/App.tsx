@@ -5,8 +5,7 @@ import ConfigScreen from './screens/ConfigScreen';
 import ReportEditorScreen from './screens/ReportEditorScreen';
 import LoginScreen from './screens/LoginScreen';
 import AdminScreen from './screens/AdminScreen'; 
-// PaymentScreen (se não for usar agora, pode remover o import e o case no switch)
-// import PaymentScreen from './screens/PaymentScreen'; 
+import PaymentScreen from './screens/PaymentScreen'; // Mantenha se for usar a tela de pagamento
 
 import { ChamberIcon, AutoclaveIcon, LogoutIcon, AdminIcon } from './components/icons'; 
 import { QualificationType } from './types';
@@ -14,6 +13,7 @@ import { QualificationType } from './types';
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
 
+  // NOVO: Efeito para carregar o currentUser do backend Node.js (via JWT)
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && !state.currentUser) {
@@ -77,8 +77,8 @@ const AppContent = () => {
             return <ReportEditorScreen />;
         case 'admin':
             return isAdmin ? <AdminScreen /> : <p className="text-red-600 text-center text-lg mt-10">Acesso negado. Você não tem permissão para acessar esta página.</p>;
-        // case 'payment': 
-        //    return <PaymentScreen />; 
+        case 'payment': 
+           return <PaymentScreen />; 
         default:
             return <LoginScreen />; 
     }

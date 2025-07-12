@@ -1,6 +1,6 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react'; // Essencial para React
+import react from '@vitejs/plugin-react'; 
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), ''); 
@@ -8,14 +8,13 @@ export default defineConfig(({ mode }) => {
     return {
       plugins: [react()], 
       define: {
-        // Apenas para variáveis que você realmente define no .env.local e usa no código
-        // Exemplo: 'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE')
-        // Se não houver outras variáveis em .env.local além da MONGO_URI no backend, este 'define' pode ser removido se não for usado no frontend.
+        // Se houver chaves de API específicas para o frontend em .env.local, defina-as aqui
+        // Exemplo: 'process.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
       },
       root: 'public', // <--- Importante: Vite procura index.html aqui
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, './src'), // Alias para a pasta src
+          '@': path.resolve(__dirname, './src'), 
         }
       },
       server: {
@@ -29,7 +28,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       build: {
-        outDir: '../dist', // O resultado do build (dist) ficará na raiz do projeto (irmão de public e src)
+        outDir: '../dist', // O resultado do build (dist) ficará na raiz do projeto
       },
     };
 });
