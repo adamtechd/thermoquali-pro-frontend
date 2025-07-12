@@ -1,51 +1,24 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import UploadScreen from './screens/UploadScreen';
 import ConfigScreen from './screens/ConfigScreen';
 import ReportEditorScreen from './screens/ReportEditorScreen';
 import LoginScreen from './screens/LoginScreen';
-import AdminScreen from './screens/AdminScreen'; 
-import PaymentScreen from './screens/PaymentScreen'; 
-
-import { ChamberIcon, AutoclaveIcon, LogoutIcon, AdminIcon } from './components/icons'; 
+import AdminScreen from './screens/AdminScreen';
+import PaymentScreen from './screens/PaymentScreen';
+import { ChamberIcon, AutoclaveIcon, LogoutIcon, AdminIcon } from './components/icons';
 import { QualificationType } from './types';
 
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && !state.currentUser) {
-      const fetchUserFromBackend = async () => {
-        try {
-          const response = await fetch('https://thermocert-api-backend.onrender.com/api/auth/me', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}` 
-            }
-          });
-          if (response.ok) {
-            const userData = await response.json(); 
-            dispatch({ type: 'LOGIN', payload: { user: userData, token: token } });
-          } else {
-            localStorage.removeItem('token');
-            dispatch({ type: 'LOGOUT' }); 
-          }
-        } catch (error) {
-          console.error("Erro ao validar token com backend:", error);
-          localStorage.removeItem('token');
-          dispatch({ type: 'LOGOUT' });
-        }
-      };
-      fetchUserFromBackend();
-    } else if (!token && state.currentStep !== 'login') {
-      dispatch({ type: 'SET_STEP', payload: 'login' });
-    }
-  }, [state.currentUser, dispatch, state.currentStep]);
+  // O useEffect para validar o token foi removido daqui,
+  // pois a lógica já existe e é executada no AppProvider (AppContext.tsx),
+  // que é o local correto para gerenciar o estado global do usuário.
+  // Isso evita redundância e possíveis requisições duplicadas.
 
   const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' }); 
+    dispatch({ type: 'LOGOUT' });
   };
   
   const handleGoToAdmin = () => {
@@ -53,20 +26,18 @@ const AppContent = () => {
   };
 
   const handleGoToApp = () => {
+    // Redireciona para a tela de upload, que é a tela inicial da aplicação logada
     dispatch({ type: 'SET_STEP', payload: 'upload' });
   }
 
-  if (!state.currentUser && state.currentStep !== 'login') {
-    return <LoginScreen />; 
+  // Se não houver usuário e o passo atual não for 'login', renderiza a tela de login.
+  if (!state.currentUser) {
+    return <LoginScreen />;
   }
   
   const isAdmin = state.currentUser?.isAdmin;
 
   const renderContent = () => {
-    if (!state.currentUser && state.currentStep !== 'login') {
-      return <LoginScreen />; 
-    }
-
     switch (state.currentStep) {
         case 'upload':
             return <UploadScreen />;
@@ -78,8 +49,9 @@ const AppContent = () => {
             return isAdmin ? <AdminScreen /> : <p className="text-red-600 text-center text-lg mt-10">Acesso negado. Você não tem permissão para acessar esta página.</p>;
         case 'payment': 
            return <PaymentScreen />; 
+        // Se o usuário estiver logado mas nenhum passo for correspondente, vai para a tela de upload.
         default:
-            return <LoginScreen />; 
+            return <UploadScreen />;
     }
   }
 
@@ -121,11 +93,10 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <React.StrictMode>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </React.StrictMode>
+    // StrictMode já engloba a aplicação
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 };
 

@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Se você tem um arquivo CSS principal (ex: index.css ou App.css)
-// que você importa diretamente no JavaScript, ele é processado pelo Vite.
-// Exemplo: import './index.css'; 
+// A importação do CSS principal agora está ativa.
+// É essencial para que o Tailwind (processado pelo Vite/PostCSS) seja aplicado.
+import './index.css'; 
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,4 +12,10 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(<App />);
+
+// Adicionado React.StrictMode para ajudar a detectar problemas comuns no desenvolvimento.
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
