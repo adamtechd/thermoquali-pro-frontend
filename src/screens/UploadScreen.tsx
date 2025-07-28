@@ -14,7 +14,6 @@ const parseCsvData = (csvText: string): string[][] => { // Retorna array de arra
     return lines.map(line => line.split(',').map(cell => cell.trim()));
 };
 
-// parseArkmedsJsonToStandardFormat permanece, mas agora é menos crítico, pois processCsvOrXlsxToArkmedsData faz o trabalho pesado
 const parseArkmedsJsonToStandardFormat = (data: RawArkmedsData): RawArkmedsData => {
     return data;
 }
