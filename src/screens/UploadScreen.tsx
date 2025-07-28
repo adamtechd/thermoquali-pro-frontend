@@ -148,11 +148,7 @@ const UploadScreen = () => {
         }
       }
 
-      // Normaliza os dados para garantir que a estrutura base é a esperada por AppContext
-      // No entanto, normalizeRawArkmedsData não é mais necessário se processCsvOrXlsxToArkmedsData já formata bem.
-      // A ação LOAD_DATA deve lidar com a estrutura gerada.
-      
-      dispatch({ type: 'LOAD_DATA', payload: { rawJsonDataArray: allProcessedData } }); // Envia TODOS os dados processados
+      dispatch({ type: 'LOAD_DATA', payload: { rawJsonDataArray: allProcessedData } }); 
       dispatch({ type: 'SET_STEP', payload: 'config' });
 
     } catch (err: any) {
