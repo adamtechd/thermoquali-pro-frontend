@@ -8,13 +8,13 @@ export default defineConfig(({ mode }) => {
     return {
       plugins: [react()], 
       define: {
-        // Nenhuma variável de ambiente específica para Firebase aqui, já que não estamos usando.
+        // Nenhuma variável de ambiente específica para Firebase aqui.
         // Se houver chaves de API específicas para o frontend em .env.local, defina-as aqui.
       },
       root: 'public', // <--- Importante: Vite procura index.html aqui
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, './src'), 
+          '@': path.resolve(__dirname, './src'), // Alias para a pasta src
         }
       },
       server: {

@@ -1,4 +1,4 @@
-// thermoquali-pro/postcss.config.cjs (AGORA .cjs)
+// thermoquali-pro/postcss.config.cjs
 module.exports = {
   plugins: {
     '@tailwindcss/postcss': {}, 
