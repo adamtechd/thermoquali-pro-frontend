@@ -4,26 +4,18 @@ import { useAppContext } from '../context/AppContext';
 import type { RawArkmedsData, QualificationType } from '../types';
 import { QualificationType as QualificationTypeEnum } from '../types';
 import { UploadIcon, SpinnerIcon, ChamberIcon, AutoclaveIcon } from '../components/icons';
+import { processCsvOrXlsxToArkmedsData } from '../services/dataProcessor'; // Importa a nova função
 
-declare const XLSX: any; // From script tag
+declare const XLSX: any; // From script tag (garante que XLSX global é reconhecido)
 
-const parseCsvData = (csvText: string): any[] => {
+const parseCsvData = (csvText: string): string[][] => { // Retorna array de arrays para consistência
     const lines = csvText.split('\n').filter(line => line.trim() !== '');
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(',').map(h => h.trim());
-    const data = lines.slice(1).map(line => {
-        const values = line.split(',');
-        return headers.reduce((obj, header, index) => {
-            obj[header] = values[index].trim();
-            return obj;
-        }, {} as {[key: string]: string});
-    });
-    return data;
+    if (lines.length < 1) return [];
+    return lines.map(line => line.split(',').map(cell => cell.trim()));
 };
 
+// parseArkmedsJsonToStandardFormat permanece, mas agora é menos crítico, pois processCsvOrXlsxToArkmedsData faz o trabalho pesado
 const parseArkmedsJsonToStandardFormat = (data: RawArkmedsData): RawArkmedsData => {
-    // This function assumes the JSON is already in the standard `RawArkmedsData` format.
-    // It's a placeholder for any future normalization if needed.
     return data;
 }
 
@@ -97,7 +89,7 @@ const UploadScreen = () => {
     );
   };
 
-  const readFile = (file: File): Promise<{fileData: any, type: string}> => {
+  const readFile = (file: File): Promise<RawArkmedsData | null> => { // Promete RawArkmedsData ou null
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       const fileType = file.name.split('.').pop()?.toLowerCase();
@@ -112,19 +104,18 @@ const UploadScreen = () => {
              if (!data.configurations.every((c: any) => c.cycles && c.cycles.length > 0 && c.cycles[0].measures)) {
                 throw new Error(`Configuração sem medições encontrada em ${file.name}.`);
             }
-            resolve({ fileData: data, type: 'json' });
+            resolve(data as RawArkmedsData); // Retorna o JSON diretamente
           } else if (fileType === 'xlsx') {
-             // For xlsx, we use the ArrayBuffer result
             const workbook = XLSX.read(reader.result, { type: 'arraybuffer' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            // This is a basic conversion, more complex logic might be needed
-            // For now, let's assume it's just raw data and will be processed later.
-            // A more robust solution would convert this to RawArkmedsData format here.
-            resolve({ fileData: jsonData, type: 'xlsx' });
-          } else { // CSV
-            resolve({ fileData: reader.result as string, type: 'csv' });
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Retorna array de arrays
+            resolve(processCsvOrXlsxToArkmedsData(jsonData, file.name)); // Transforma XLSX para ArkmedsData
+          } else if (fileType === 'csv') { // CSV
+            const csvData = parseCsvData(reader.result as string); // Retorna array de arrays
+            resolve(processCsvOrXlsxToArkmedsData(csvData, file.name)); // Transforma CSV para ArkmedsData
+          } else {
+            resolve(null); // Tipo de arquivo não suportado ou vazio
           }
         } catch (e: any) {
            reject(new Error(`Erro ao processar ${file.name}: ${e.message}`));
@@ -148,19 +139,27 @@ const UploadScreen = () => {
     const fileList = Object.values(files).filter(f => f !== null) as File[];
 
     try {
-      const parsedData = await Promise.all(fileList.map(readFile));
+      const allProcessedData: RawArkmedsData[] = [];
+      
+      for (const file of fileList) {
+        const processedFile = await readFile(file);
+        if (processedFile) {
+          allProcessedData.push(processedFile);
+        }
+      }
 
-      // For now, we only support the Arkmeds JSON format for automatic processing.
-      // CSV/XLSX would require a dedicated mapping/parsing step which is not fully defined.
-      // We will only pass JSON files to the LOAD_DATA reducer.
-      const jsonFiles = parsedData.filter(d => d.type === 'json').map(d => d.fileData as RawArkmedsData);
-
-      dispatch({ type: 'LOAD_DATA', payload: { rawJsonDataArray: jsonFiles } });
+      // Normaliza os dados para garantir que a estrutura base é a esperada por AppContext
+      // No entanto, normalizeRawArkmedsData não é mais necessário se processCsvOrXlsxToArkmedsData já formata bem.
+      // A ação LOAD_DATA deve lidar com a estrutura gerada.
+      
+      dispatch({ type: 'LOAD_DATA', payload: { rawJsonDataArray: allProcessedData } }); // Envia TODOS os dados processados
       dispatch({ type: 'SET_STEP', payload: 'config' });
 
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 
