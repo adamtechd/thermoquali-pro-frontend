@@ -3,24 +3,24 @@ import type { RawArkmedsData, SensorDataRow } from '../types';
 
 /**
  * Converte dados de CSV/XLSX (Array de Arrays) para RawArkmedsData.
- * Assume que o CSV/XLSX contém dados de sensores para um único ciclo.
  * Procura a linha de cabeçalho real dinamicamente e melhora o parsing de data/hora.
  */
 export const processCsvOrXlsxToArkmedsData = (
-  rawData: string[][], // Agora sempre Array<Array<string>>
+  rawData: string[][], 
   fileName: string
 ): RawArkmedsData => {
   let headerRowIndex = -1;
   let headers: string[] = [];
 
-  // 1. Encontrar a linha de cabeçalho real procurando por "Index", "Time" e um sensor (CHxx ou Sxx)
+  // 1. Encontrar a linha de cabeçalho real
   for (let i = 0; i < rawData.length; i++) {
     const row = rawData[i];
+    // Garante que a célula é string antes de chamar trim()
     if (row && row.length > 0 && 
-        row.some(cell => typeof cell === 'string' && cell.trim().toLowerCase() === 'index') && // Procura por 'Index'
-        row.some(cell => typeof cell === 'string' && cell.trim().toLowerCase() === 'time') &&   // Procura por 'Time'
-        row.some(cell => typeof cell === 'string' && (cell.trim().toLowerCase().startsWith('ch') || cell.trim().toLowerCase().startsWith('s')))) { // Procura por CHxx ou Sxx
-      headers = row.map(h => h.trim());
+        row.some(cell => typeof cell === 'string' && cell.trim().toLowerCase() === 'index') && 
+        row.some(cell => typeof cell === 'string' && cell.trim().toLowerCase() === 'time') &&   
+        row.some(cell => typeof cell === 'string' && (cell.trim().toLowerCase().startsWith('ch') || cell.trim().toLowerCase().startsWith('s')))) { 
+      headers = row.map(h => (h || '').trim()); // Protege trim()
       headerRowIndex = i;
       break;
     }
@@ -43,12 +43,12 @@ export const processCsvOrXlsxToArkmedsData = (
   const timeIndex = headers.indexOf(timeHeader);
 
   dataRows.forEach((row: string[], rowIndex: number) => {
-    // Pular linhas completamente vazias ou linhas que parecem ser cabeçalhos secundários
-    if (row.every(cell => !cell || cell.trim() === '')) {
+    // Pular linhas completamente vazias
+    if (row.every(cell => typeof cell !== 'string' || cell.trim() === '')) {
       return;
     }
 
-    // Pular linhas que podem ser rodapés ou dados incompletos (ex: se não tiver o campo de tempo)
+    // Pular linhas se o campo de tempo não existir ou estiver vazio
     if (timeIndex === -1 || !row[timeIndex] || row[timeIndex].trim() === '') {
         console.warn(`[WARN] Linha ${headerRowIndex + 2 + rowIndex} em ${fileName} ignorada: campo de tempo vazio ou ausente.`);
         return;
@@ -58,23 +58,33 @@ export const processCsvOrXlsxToArkmedsData = (
     let timestamp: number;
 
     // Melhoria no parsing de data/hora: DD-MM-YY HH:MM:SS
-    // Ex: "25-07-25 01:07:34"
     const parseDateWithFormat = (dateStr: string): Date | null => {
+        // Tenta formatos comuns primeiro
+        let date = new Date(dateStr);
+        if (!isNaN(date.getTime())) return date; // Se o parse padrão funcionar, ótimo
+
+        // Tenta formato DD-MM-YY HH:MM:SS
         const parts = dateStr.match(/(\d{2})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
         if (parts) {
             const [, day, month, year, hours, minutes, seconds] = parts.map(Number);
-            // Corrige o ano para 4 dígitos (ex: 25 -> 2025). Assume anos < 70 são 20xx, >= 70 são 19xx.
-            const fullYear = year < 70 ? 2000 + year : 1900 + year;
-            // Note: Month is 0-indexed in JavaScript Date (0 for Jan, 11 for Dec)
-            return new Date(fullYear, month - 1, day, hours, minutes, seconds);
+            const fullYear = year < 70 ? 2000 + year : 1900 + year; // Ajusta XX para 19XX ou 20XX
+            return new Date(fullYear, month - 1, day, hours, minutes, seconds); // Mês é 0-indexed
         }
-        return null;
+
+        // Tenta formato YYYY-MM-DD HH:MM:SS se precisar de mais robustez
+        const isoParts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (isoParts) {
+            const [, year, month, day, hours, minutes, seconds] = isoParts.map(Number);
+            return new Date(year, month - 1, day, hours, minutes, seconds);
+        }
+
+        return null; // Não conseguiu parsear
     };
 
     const parsedDate = parseDateWithFormat(timeValue);
 
     if (parsedDate && !isNaN(parsedDate.getTime())) {
-        timestamp = Math.floor(parsedDate.getTime() / 1000); // Segundos desde a época
+        timestamp = Math.floor(parsedDate.getTime() / 1000); 
     } else {
         console.warn(`[WARN] Formato de tempo inválido na linha ${headerRowIndex + 2 + rowIndex} de ${fileName}: "${timeValue}". Linha ignorada.`);
         return; 
@@ -85,16 +95,14 @@ export const processCsvOrXlsxToArkmedsData = (
     sensorHeaders.forEach((sensorHeader: string, index: number) => {
       const sensorColIndex = headers.indexOf(sensorHeader);
       let sensorValue = '';
-      if (sensorColIndex !== -1 && row[sensorColIndex]) {
-        sensorValue = row[sensorColIndex].trim();
+      if (sensorColIndex !== -1 && row[sensorColIndex] !== undefined && row[sensorColIndex] !== null) { // Garante que a célula existe
+        sensorValue = String(row[sensorColIndex]).trim(); // Converte para string e trim
       }
       
       const parsedValue = parseFloat(sensorValue);
-      if (!isNaN(parsedValue)) {
-        measureEntry[`sensor${index + 1}`] = parsedValue;
-      } else {
-        console.warn(`[WARN] Valor não numérico para sensor '${sensorHeader}' na linha ${headerRowIndex + 2 + rowIndex} de ${fileName}: "${sensorValue}".`);
-      }
+      // Sempre define o sensor, mesmo que o valor não seja numérico (com 0 ou null)
+      // Isso evita 'undefined' ao acessar sensorN em componentes de UI
+      measureEntry[`sensor${index + 1}`] = isNaN(parsedValue) ? 0 : parsedValue; 
     });
     measures.push(measureEntry);
   });
@@ -107,7 +115,7 @@ export const processCsvOrXlsxToArkmedsData = (
 
   return {
     status: 'parsed',
-    serial_number: `FROM_${fileName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}_${Date.now()}`, // Serial único
+    serial_number: `FROM_${fileName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}_${Date.now()}`, 
     configurations: [
       {
         duration: measures.length > 1 ? measures[measures.length - 1].timestamp - measures[0].timestamp : 0,
