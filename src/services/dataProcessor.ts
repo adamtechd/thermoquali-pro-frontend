@@ -1,9 +1,8 @@
-// thermocert-pro/src/services/dataProcessor.ts
+// thermocert-api/src/services/dataProcessor.ts
 import type { RawArkmedsData, SensorDataRow } from '../types';
 
 /**
  * Converte dados de CSV/XLSX (Array de Arrays) para RawArkmedsData.
- * Assume que o CSV/XLSX contém dados de sensores para um único ciclo.
  * Procura a linha de cabeçalho real dinamicamente e melhora o parsing de data/hora.
  */
 export const processCsvOrXlsxToArkmedsData = (
