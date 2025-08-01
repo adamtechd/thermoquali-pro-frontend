@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       root: 'public', // <--- Importante: Vite procura index.html aqui
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, './src'), // Alias para a pasta src
+          '@': path.resolve(__dirname, './src'), 
         }
       },
       server: {
