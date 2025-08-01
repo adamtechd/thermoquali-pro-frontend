@@ -14,6 +14,10 @@ const parseCsvData = (csvText: string): string[][] => {
     return lines.map(line => line.split(',').map(cell => (cell || '').trim()));
 };
 
+const parseArkmedsJsonToStandardFormat = (data: RawArkmedsData): RawArkmedsData => {
+    return data;
+}
+
 const UploadScreen = () => {
   const { state, dispatch } = useAppContext();
   const [error, setError] = useState<string | null>(null);

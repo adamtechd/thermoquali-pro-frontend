@@ -94,7 +94,6 @@ export const processCsvOrXlsxToArkmedsData = (
       }
       
       const parsedValue = parseFloat(sensorValue);
-      // Sempre define o sensor, mesmo que o valor não seja numérico
       measureEntry[`sensor${index + 1}`] = isNaN(parsedValue) ? 0 : parsedValue; 
     });
     measures.push(measureEntry);
