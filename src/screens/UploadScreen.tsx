@@ -4,19 +4,15 @@ import { useAppContext } from '../context/AppContext';
 import type { RawArkmedsData, QualificationType } from '../types';
 import { QualificationType as QualificationTypeEnum } from '../types';
 import { UploadIcon, SpinnerIcon, ChamberIcon, AutoclaveIcon } from '../components/icons';
-import { processCsvOrXlsxToArkmedsData } from '../services/dataProcessor'; // Importa a nova função
+import { processCsvOrXlsxToArkmedsData } from '../services/dataProcessor';
 
-declare const XLSX: any; // From script tag (garante que XLSX global é reconhecido)
+declare const XLSX: any; 
 
-const parseCsvData = (csvText: string): string[][] => { // Retorna array de arrays para consistência
+const parseCsvData = (csvText: string): string[][] => { 
     const lines = csvText.split('\n').filter(line => line.trim() !== '');
     if (lines.length < 1) return [];
-    return lines.map(line => line.split(',').map(cell => cell.trim()));
+    return lines.map(line => line.split(',').map(cell => (cell || '').trim()));
 };
-
-const parseArkmedsJsonToStandardFormat = (data: RawArkmedsData): RawArkmedsData => {
-    return data;
-}
 
 const UploadScreen = () => {
   const { state, dispatch } = useAppContext();
@@ -42,7 +38,7 @@ const UploadScreen = () => {
 
   const handleSelectType = (type: QualificationType) => {
     setSelectedType(type);
-    setFiles({}); // Reset files when type changes
+    setFiles({});
     setError(null);
     dispatch({ type: 'SET_QUALIFICATION_TYPE', payload: type });
   };
@@ -88,7 +84,7 @@ const UploadScreen = () => {
     );
   };
 
-  const readFile = (file: File): Promise<RawArkmedsData | null> => { // Promete RawArkmedsData ou null
+  const readFile = (file: File): Promise<RawArkmedsData | null> => { 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       const fileType = file.name.split('.').pop()?.toLowerCase();
@@ -103,18 +99,18 @@ const UploadScreen = () => {
              if (!data.configurations.every((c: any) => c.cycles && c.cycles.length > 0 && c.cycles[0].measures)) {
                 throw new Error(`Configuração sem medições encontrada em ${file.name}.`);
             }
-            resolve(data as RawArkmedsData); // Retorna o JSON diretamente
+            resolve(data as RawArkmedsData); 
           } else if (fileType === 'xlsx') {
             const workbook = XLSX.read(reader.result, { type: 'arraybuffer' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Retorna array de arrays
-            resolve(processCsvOrXlsxToArkmedsData(jsonData, file.name)); // Transforma XLSX para ArkmedsData
-          } else if (fileType === 'csv') { // CSV
-            const csvData = parseCsvData(reader.result as string); // Retorna array de arrays
-            resolve(processCsvOrXlsxToArkmedsData(csvData, file.name)); // Transforma CSV para ArkmedsData
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); 
+            resolve(processCsvOrXlsxToArkmedsData(jsonData, file.name)); 
+          } else if (fileType === 'csv') { 
+            const csvData = parseCsvData(reader.result as string); 
+            resolve(processCsvOrXlsxToArkmedsData(csvData, file.name)); 
           } else {
-            resolve(null); // Tipo de arquivo não suportado ou vazio
+            resolve(null); 
           }
         } catch (e: any) {
            reject(new Error(`Erro ao processar ${file.name}: ${e.message}`));

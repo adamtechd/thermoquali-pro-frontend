@@ -3,16 +3,17 @@ import type { RawArkmedsData, SensorDataRow } from '../types';
 
 /**
  * Converte dados de CSV/XLSX (Array de Arrays) para RawArkmedsData.
+ * Assume que o CSV/XLSX contém dados de sensores para um único ciclo.
  * Procura a linha de cabeçalho real dinamicamente e melhora o parsing de data/hora.
  */
 export const processCsvOrXlsxToArkmedsData = (
-  rawData: string[][], 
+  rawData: any[][], // Agora sempre Array<Array<any>>
   fileName: string
 ): RawArkmedsData => {
   let headerRowIndex = -1;
   let headers: string[] = [];
 
-  // 1. Encontrar a linha de cabeçalho real
+  // 1. Encontrar a linha de cabeçalho real procurando por "Index", "Time" e um sensor (CHxx ou Sxx)
   for (let i = 0; i < rawData.length; i++) {
     const row = rawData[i];
     // Garante que a célula é string antes de chamar trim()
@@ -42,43 +43,36 @@ export const processCsvOrXlsxToArkmedsData = (
   const measures: { [key: string]: any }[] = [];
   const timeIndex = headers.indexOf(timeHeader);
 
-  dataRows.forEach((row: string[], rowIndex: number) => {
+  dataRows.forEach((row: any[], rowIndex: number) => {
     // Pular linhas completamente vazias
-    if (row.every(cell => typeof cell !== 'string' || cell.trim() === '')) {
+    if (row.every(cell => !cell || (typeof cell === 'string' && cell.trim() === ''))) {
       return;
     }
 
     // Pular linhas se o campo de tempo não existir ou estiver vazio
-    if (timeIndex === -1 || !row[timeIndex] || row[timeIndex].trim() === '') {
+    if (timeIndex === -1 || !row[timeIndex] || String(row[timeIndex]).trim() === '') {
         console.warn(`[WARN] Linha ${headerRowIndex + 2 + rowIndex} em ${fileName} ignorada: campo de tempo vazio ou ausente.`);
         return;
     }
 
-    let timeValue = row[timeIndex].trim();
+    let timeValue = String(row[timeIndex]).trim();
     let timestamp: number;
 
-    // Melhoria no parsing de data/hora: DD-MM-YY HH:MM:SS
     const parseDateWithFormat = (dateStr: string): Date | null => {
-        // Tenta formatos comuns primeiro
         let date = new Date(dateStr);
-        if (!isNaN(date.getTime())) return date; // Se o parse padrão funcionar, ótimo
-
-        // Tenta formato DD-MM-YY HH:MM:SS
+        if (!isNaN(date.getTime())) return date;
         const parts = dateStr.match(/(\d{2})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
         if (parts) {
             const [, day, month, year, hours, minutes, seconds] = parts.map(Number);
-            const fullYear = year < 70 ? 2000 + year : 1900 + year; // Ajusta XX para 19XX ou 20XX
-            return new Date(fullYear, month - 1, day, hours, minutes, seconds); // Mês é 0-indexed
+            const fullYear = year < 70 ? 2000 + year : 1900 + year;
+            return new Date(fullYear, month - 1, day, hours, minutes, seconds);
         }
-
-        // Tenta formato YYYY-MM-DD HH:MM:SS se precisar de mais robustez
-        const isoParts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
-        if (isoParts) {
-            const [, year, month, day, hours, minutes, seconds] = isoParts.map(Number);
-            return new Date(year, month - 1, day, hours, minutes, seconds);
+        const excelDate = parseFloat(dateStr);
+        if(!isNaN(excelDate)){
+            const dateFromExcel = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+            if (!isNaN(dateFromExcel.getTime())) return dateFromExcel;
         }
-
-        return null; // Não conseguiu parsear
+        return null;
     };
 
     const parsedDate = parseDateWithFormat(timeValue);
@@ -95,13 +89,12 @@ export const processCsvOrXlsxToArkmedsData = (
     sensorHeaders.forEach((sensorHeader: string, index: number) => {
       const sensorColIndex = headers.indexOf(sensorHeader);
       let sensorValue = '';
-      if (sensorColIndex !== -1 && row[sensorColIndex] !== undefined && row[sensorColIndex] !== null) { // Garante que a célula existe
-        sensorValue = String(row[sensorColIndex]).trim(); // Converte para string e trim
+      if (sensorColIndex !== -1 && row[sensorColIndex] !== undefined && row[sensorColIndex] !== null) { 
+        sensorValue = String(row[sensorColIndex]).trim(); 
       }
       
       const parsedValue = parseFloat(sensorValue);
-      // Sempre define o sensor, mesmo que o valor não seja numérico (com 0 ou null)
-      // Isso evita 'undefined' ao acessar sensorN em componentes de UI
+      // Sempre define o sensor, mesmo que o valor não seja numérico
       measureEntry[`sensor${index + 1}`] = isNaN(parsedValue) ? 0 : parsedValue; 
     });
     measures.push(measureEntry);
